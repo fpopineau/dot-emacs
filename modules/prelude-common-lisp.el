@@ -34,12 +34,19 @@
 
 (require 'prelude-lisp)
 
+(defcustom prelude-quicklisp-path "~/quicklisp"
+  "The location of Quicklisp directory."
+  :group 'prelude-common-lisp
+  :type 'string
+  :safe'stringp
+  )
+
 ;; the SBCL configuration file is in Common Lisp
 (add-to-list 'auto-mode-alist '("\\.sbclrc$" . lisp-mode))
 
 ;; Common Lisp support depends on SLIME being installed with Quicklisp
-(if (file-exists-p (expand-file-name "~/quicklisp/slime-helper.el"))
-    (load (expand-file-name "~/quicklisp/slime-helper.el"))
+(if (file-exists-p (expand-file-name "slime-helper.el" prelude-quicklisp-path))
+    (load (expand-file-name "slime-helper.el" prelude-quicklisp-path))
   (message "%s" "SLIME is not installed. Use Quicklisp to install it."))
 
 ;; a list of alternative Common Lisp implementations that can be

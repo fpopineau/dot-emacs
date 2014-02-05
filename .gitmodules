@@ -1,0 +1,12 @@
+[submodule "vendor/org-mode"]
+	path = vendor/org-mode
+	url = git://orgmode.org/org-mode.git
+[submodule "vendor/slime"]
+	path = vendor/slime
+	url = https://github.com/slime/slime.git
+[submodule "vendor/auctex"]
+	path = vendor/auctex
+	url = http://git.savannah.gnu.org/cgit/auctex.git
+[submodule "vendor/o-blog"]
+	path = vendor/o-blog
+	url = https://github.com/renard/o-blog
