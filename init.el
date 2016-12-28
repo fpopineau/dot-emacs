@@ -359,7 +359,7 @@
 	  "org-html-themes"
           "org-ref"
           "org-reveal"
-          "pdf-tools-0.70"
+          "pdf-tools/pdf-tools-0.70"
 	  "ppd-sr-speedbar"
           ;; "sly"
           "slime"

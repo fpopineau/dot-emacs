@@ -1,0 +1,6 @@
+[submodule "local/el-misc"]
+	path = local/el-misc
+	url = https://github.com/fpopineau/el-misc.git
+[submodule "local/pdf-tools"]
+	path = local/pdf-tools
+	url = https://github.com/fpopineau/pdf-tools.git
