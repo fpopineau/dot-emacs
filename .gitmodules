@@ -4,3 +4,36 @@
 [submodule "local/pdf-tools"]
 	path = local/pdf-tools
 	url = https://github.com/fpopineau/pdf-tools.git
+[submodule "local/org-board"]
+	path = local/org-board
+	url = https://github.com/fpopineau/org-board.git
+[submodule "local/org-html-themes"]
+	path = local/org-html-themes
+	url = https://github.com/fpopineau/org-html-themes.git
+[submodule "local/org-one-to-many"]
+	path = local/org-one-to-many
+	url = https://github.com/fpopineau/org-one-to-many.git
+[submodule "local/org-reveal"]
+	path = local/org-reveal
+	url = https://github.com/fpopineau/org-reveal.git
+[submodule "local/ppd-sr-speedbar"]
+	path = local/ppd-sr-speedbar
+	url = https://github.com/fpopineau/ppd-sr-speedbar.git
+[submodule "local/slime"]
+	path = local/slime
+	url = https://github.com/fpopineau/slime.git
+[submodule "local/sly"]
+	path = local/sly
+	url = https://github.com/fpopineau/sly.git
+[submodule "local/sumatra-forward"]
+	path = local/sumatra-forward
+	url = https://github.com/fpopineau/sumatra-forward.git
+[submodule "local/swiper"]
+	path = local/swiper
+	url = https://github.com/fpopineau/swiper.git
+[submodule "local/undo-tree"]
+	path = local/undo-tree
+	url = https://github.com/fpopineau/undo-tree.git
+[submodule "local/org-mode"]
+	path = local/org-mode
+	url = https://github.com/fpopineau/org-mode.git
