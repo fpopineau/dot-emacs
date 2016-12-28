@@ -85,11 +85,14 @@
   (mapcar
    #'(lambda (pair)
        (save-mark-and-excursion
-        (goto-char (point-min))
-        (while (re-search-forward (concat "[^\\w]\\(" (regexp-quote (car pair)) "\\)[^\\w]") (point-max)  t)
-          (replace-match (char-to-string (cdr pair)) t t nil 1))
-        )
-       )
+        (save-restriction
+          (when (region-active-p)
+            (narrow-to-region (region-beginning)
+                              (region-end)))
+          (goto-char (point-min))
+          (while (re-search-forward (concat "[^\\w]\\(" (regexp-quote (car pair)) "\\)[^\\w]") (point-max)  t)
+            (replace-match (char-to-string (cdr pair)) t t nil 1))
+          (widen))))
 
    '(("lambda" . 955)
      ("<-" . ?←) ; 8592

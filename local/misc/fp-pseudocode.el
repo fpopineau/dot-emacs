@@ -86,7 +86,7 @@
   "Regular expression matching lines starting an indentation level in pseudo code")
 
 (defvar pseudocode-closing
-  "^\\s-*\\(nuf\\|fi\\|else\\)"
+  "^\\s-*\\(nuf\\|fi\\|else\\|end\\)"
   "Regular expression matching lines ending an indentation level in pseudo code")
 
 (defun pseudocode-indent-line ()
