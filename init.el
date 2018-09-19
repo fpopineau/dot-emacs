@@ -1150,7 +1150,9 @@ The body of the advice is in BODY."
 ;; ** magithub
 (use-package magithub
   :after magit
-  :config (magithub-feature-autoinject t))
+  :config
+  (setq magithub-dir (expand-file-name "magithub" fp-config-savefile-dir))
+  (magithub-feature-autoinject t))
 
 ;; ** markdown-mode
 ;;(use-package markdown-mode)
