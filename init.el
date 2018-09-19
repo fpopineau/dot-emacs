@@ -398,7 +398,7 @@
 	'(
           ;; "magit/lisp"
 	  "el-misc"
-          "font-lock+"
+          "font-lock-plus"
           "org-mode/lisp"
           "org-board"
 	  "org-html-themes"

@@ -37,3 +37,21 @@
 [submodule "local/org-mode"]
 	path = local/org-mode
 	url = https://github.com/fpopineau/org-mode.git
+[submodule "local/font-lock-plus"]
+	path = local/font-lock-plus
+	url = https://github.com/emacsmirror/font-lock-plus.git
+[submodule "local/ox-ipynb"]
+	path = local/ox-ipynb
+	url = https://github.com/jkitchin/ox-ipynb.git
+[submodule "local/ox-hugo"]
+	path = local/ox-hugo
+	url = https://github.com/kaushalmodi/ox-hugo.git
+[submodule "local/org-protocol-capture-html"]
+	path = local/org-protocol-capture-html
+	url = https://github.com/alphapapa/org-protocol-capture-html.git
+[submodule "local/spaceline"]
+	path = local/spaceline
+	url = https://github.com/TheBB/spaceline.git
+[submodule "local/org-ref"]
+	path = local/org-ref
+	url = https://github.com/jkitchin/org-ref
