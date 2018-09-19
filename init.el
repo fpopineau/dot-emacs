@@ -28,50 +28,72 @@
 
 ;; * Startup
 
+(require 'edebug)
+
 ;; ** Environment
 
-;;(setenv "HOME" "c:/Home/")
+(when (eq system-type 'windows-nt)
+;;  (setenv "TEMP" "c:/Temp/")
+;;  (setenv "temp" "c:/Temp/")
+;;  (setenv "TMP" "c:/Temp/")
+;;  (setenv "TMPDIR" "c:/Temp/")
+  (setenv "HOME" "c:/Home/")
+  (setenv "SHELL" (expand-file-name "cmdproxy.exe" exec-directory))
+;; PATH=/MingW64/bin:/c/Local/Miniconda3:/c/Local/Miniconda3/Scripts:/c/Local/Miniconda3/Library/bin:/usr/bin:/c/Local/TeXLive/bin/win32:/c/Local/CCL/current:/c/Local/SBCL/current:/c/Local/SumatraPDF:/c/Local/SwiProlog/bin:/c/Local/BibTeX2HTML:/c/Local/CUDA/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem
 
-(setenv "PATH" (concat "C:\\Windows\\System32"
-                       ";C:\\Windows"
-                       ";C:\\Windows\\System32\\Wbem"
-                       ";C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
-                       ";C:\\Local\\Emacs\\bin"
-                       ";C:\\Local\\TeXLive\\bin\\win32"
-                       ";C:\\Local\\Hunspell\\bin"
-                       ;;                         ";c:\\Source\\Gnu\\Orig\\w3m-0.5.3"
-                       ";C:\\Local\\Putty"
-                       ;;                         ";C:\\Local\\Ruby193\\bin"
-                       ;;                         ";C:\\Local\\Bazaar"
-                       ;;                         ";C:\\Local\\Git\\bin"
-                       ;;                         ";C:\\Local\\StrawBerry\\perl\\bin"
-                       ";C:\\Local\\Miniconda3"
-                       ";C:\\Local\\Miniconda3\\Scripts"
-                       ;; ";C:\\Local\\ImageMagick-6.9.2-Q16\\"
-                       ";C:\\Local\\GhostScript\\GS9.15\\bin\\"
-                       ;;                         ";C:\\Local\\Subversion\\bin"
-                       ";C:\\Local\\CCL\\current"
-                       ";C:\\Local\\SBCL\\current"
-                       ";C:\\Local\\SumatraPDF"
-                       ";C:\\Local\\SwiProlog\\bin"
-                       ";C:\\Local\\BibTeX2HTML"
-                       ";C:\\Local\\OpenSSL-Win64"
-                       ";c:\\Local\\CUDA\\bin"
-                       ";c:\\Local\\OpenBLAS\\0.2.15\\bin"
-                       ";c:\\Local\\FreeGLUT\\bin\\x64"
-                       ";C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\bin\\amd64"
-                       ";C:\\MSys64\\MingW64\\bin"
-                       ";C:\\MSys64\\usr\\bin"
-                       ))
-(setq exec-path (split-string (getenv "PATH") ";"))
+  (setenv "PATH" (concat
+                  "C:\\Local\\Anaconda3"
+                  ";C:\\Local\\Anaconda3\\Scripts"
+                  ";C:\\Local\\Anaconda3\\Library\\bin"
+                  ";C:\\Local\\MSys64\\MingW64\\bin"
+                  ";C:\\Local\\MSys64\\usr\\bin"
+                  ";C:\\Local\\TeXLive\\bin\\win32"
+                  ";C:\\Local\\Putty"
+                  ";C:\\Local\\CCL\\current"
+                  ";C:\\Local\\SBCL\\current"
+                  ";C:\\Local\\SumatraPDF"
+                  ";C:\\Local\\SwiProlog\\bin"
+                  ";C:\\Local\\BibTeX2HTML"
+                  ";C:\\Local\\CUDA\\bin"
+                  ";C:\\Local\\Pandoc"
+                  ";C:\\Windows\\System32"
+                  ";C:\\Windows"
+                  ";C:\\Windows\\System32\\Wbem"
+                         ;; ";C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+                         ;; ";C:\\Local\\Emacs\\bin"
+                         ;;                         ";c:\\Source\\Gnu\\Orig\\w3m-0.5.3"
+                         ;;                         ";C:\\Local\\Ruby193\\bin"
+                         ;;                         ";C:\\Local\\Bazaar"
+                         ;;                         ";C:\\Local\\Git\\bin"
+                         ;;                         ";C:\\Local\\StrawBerry\\perl\\bin"
+                         ;; ";C:\\Local\\ImageMagick-6.9.2-Q16\\"
+                         ;; ";C:\\Local\\GhostScript\\GS9.15\\bin\\"
+                         ;;                         ";C:\\Local\\Subversion\\bin"
+                         ;; ";C:\\Local\\OpenSSL-Win64"
+                         ;; ";c:\\Local\\OpenBLAS\\0.2.15\\bin"
+                         ;; ";c:\\Local\\FreeGLUT\\bin\\x64"
+                         ;; ";C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\bin\\amd64"
+                         ))
+  (setq exec-path (split-string (getenv "PATH") ";"))
 
-(setenv "TEXMFLOCAL" "$TEXMFROOT/texmf-local")
-(setenv "SBCL_HOME" "c:/Local/SBCL/current/")
+  (setenv "PYTHONPATH" "c:/Home/.python")
+  (setenv "TEXMFLOCAL" "$TEXMFROOT/texmf-local")
+  (setenv "SBCL_HOME" "c:/Local/SBCL/current/")
+  
+  (setenv "OPENBLAS_NUM_THREADS" "4")
+  
+  ;; For TeXDocTk
+  (setenv "PDFVIEWER" "c:/Local/SumatraPDF/Sumatrapdf.exe"))
 
-(setenv "OPENBLAS_NUM_THREADS" "4")
+(when (eq system-type 'gnu/linux)
+  (require 'dbus)
+  (dbus-init-bus :system))
+
+;; ** Init dynamic libraries
 
-;; For TeXDocTk
-(setenv "PDFVIEWER" "c:/Local/SumatraPDF/Sumatrapdf.exe")
+(dolist (type '(xpm jpeg png tiff gif imagemagick svg))
+  (init-image-library type))
+
 
 ;; ** Who am I?
 
@@ -79,7 +101,7 @@
   (getenv
    (if (equal system-type 'windows-nt) "USERNAME" "USER")))
 
-(defvar fp-config-dir (file-name-directory load-file-name)
+(defvar fp-config-dir (file-name-directory (or load-file-name user-emacs-directory))
   "The root dir of the Emacs FP configuration.")
 
 (defvar fp-config-savefile-dir (expand-file-name "savefile" fp-config-dir)
@@ -100,10 +122,14 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+;; (setq use-package-always-ensure t)
+
 (eval-when-compile
   (require 'use-package))
-(require 'diminish)                ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
+(use-package diminish                ;; if you use :diminish
+  :ensure t)
+(use-package bind-key                ;; if you use any :bind variant
+  :ensure t)
 
 
 (setq emacs-debug nil)
@@ -120,6 +146,9 @@
   (set-default-coding-systems 'utf-8)
   (set-terminal-coding-system 'utf-8)
   (set-selection-coding-system 'utf-8))
+
+;; Add coding systems for process that may require specific settings
+(add-to-list 'process-coding-system-alist '("[pP][aA][nN][dD][oO][cC]" utf-8 . utf-8))
 
 ;; Always load newest byte code
 (setq load-prefer-newer t)
@@ -157,26 +186,27 @@
 ;; does what is needed to get hyper and super keys.
 ;; Make PC keyboard's Win key or other to type Super or Hyper, for emacs running on Windows.
 
-(setq w32-pass-lwindow-to-system nil
-      w32-pass-rwindow-to-system nil
-      w32-pass-apps-to-system nil
-      w32-lwindow-modifier 'super ; Left Windows key
-      w32-rwindow-modifier 'super ; Right Windows key
-      w32-apps-modifier 'hyper) ; Menu keyemacs lisp
-
-(w32-register-hot-key [s-])
-(w32-register-hot-key [h-])
-
-;; Win32 !
-;; As of Emacs 24.4, unicode filenames under NT should be honoured
-;; (set-file-name-coding-system 'latin-1)
-;; MS Windows clipboard is UTF-16LE
-(set-clipboard-coding-system 'utf-16le-dos)
-
-;; Fix a problem where it takes forever to read
-;; the output of a process.
-(setq  w32-pipe-read-delay 0)
-
+(when (eq system-type 'windows-nt)
+  (setq w32-pass-lwindow-to-system nil
+	w32-pass-rwindow-to-system nil
+	w32-pass-apps-to-system nil
+	w32-lwindow-modifier 'hyper ; Left Windows key
+	w32-rwindow-modifier 'hyper ; Right Windows key
+	w32-apps-modifier 'super) ; Menu keyemacs lisp
+  
+  (w32-register-hot-key [s-])
+  (w32-register-hot-key [h-])
+  
+  ;; Win32 !
+  ;; As of Emacs 24.4, unicode filenames under NT should be honoured
+  ;; (set-file-name-coding-system 'latin-1)
+  ;; MS Windows clipboard is UTF-16LE
+  (set-clipboard-coding-system 'utf-16le-dos)
+  
+  ;; Fix a problem where it takes forever to read
+  ;; the output of a process.
+  (setq  w32-pipe-read-delay 0)
+  )
 
 ;; * Editor
 
@@ -207,6 +237,8 @@
 ;; store all backup and autosave files in the tmp dir
 (setq backup-directory-alist
       `((".*" . ,temporary-file-directory)))
+(setq auto-save-list-file-prefix
+      (expand-file-name "auto-save-list/.saves-" fp-config-savefile-dir))
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
@@ -265,9 +297,8 @@
 
 (add-to-list 'default-frame-alist '(internal-border-width . 0))
 
-(setq line-spacing 1)
-
-(add-to-list 'default-frame-alist `(font . "Consolas-10"))
+;; (when (eq system-type 'windows-nt)
+;;   (add-to-list 'default-frame-alist `(font . "Consolas-10")))
 
 (set-fringe-mode '(8 . 0))
 
@@ -323,16 +354,29 @@
     (global-set-key (kbd "C-x p") 'proced))
 
 ;; * Fonts
-(set-face-font 'default "Consolas-10")
-(set-face-font 'variable-pitch "Segoe UI-10")
-(set-face-font 'fixed-pitch "Consolas-10")
 
-;; convert symbols like greek letter into its unicode character
+(when (eq system-type 'windows-nt)
+  (set-face-font 'default "Consolas-11")
+  (set-face-font 'variable-pitch "Segoe UI-11")
+  (set-face-font 'fixed-pitch "Consolas-11")
+  (custom-set-variables '(line-spacing 0.1))
+  )
+
+(when (eq system-type 'gnu/linux)
+  (set-face-font 'default "Consolas-17")
+  (set-face-font 'variable-pitch "Segoe UI-17")
+  (set-face-font 'fixed-pitch "Consolas-17")
+  (custom-set-variables '(line-spacing 0.2))
+  )
+
+;; ;; convert symbols like greek letter into its unicode character
 (global-prettify-symbols-mode)
 
 ;; Enable emoji, and stop the UI from freezing when trying to display them.
-;; (if (fboundp 'set-fontset-font)
-;;     (set-fontset-font t 'unicode "Segoe UI Emoji Normal" nil 'prepend))
+(if (fboundp 'set-fontset-font)
+    (set-fontset-font t 'unicode "Segoe UI Emoji Normal" nil 'prepend))
+
+(setq inhibit-compacting-font-caches t)
 
 
 ;; * Setup local packages
@@ -340,7 +384,7 @@
 (require 'cl)
 
 (defvar *fp-config-packages-supplied-regexp*
-  "\\(lisp/org/\\|elpa/slime-[0-9]+\\|elpa/org-mode-[0-9]+\\|elpa/org-ref-[0-9]+\\|elpa/org-reveal-[0-9]+\\|elpa/undo-tree-[0-9]+\\|elpa/ivy-[0-9]+\\|elpa/counsel-[0-9]+\\|elpa/swiper-[0-9]+\\)")
+  "\\(lisp/org\\|elpa/slime-[0-9\.]+\\|elpa/org-mode-[0-9\.]+\\|elpa/org-ref-[0-9\.]+\\|elpa/org-reveal-[0-9\.]+\\|elpa/undo-tree-[0-9\.]+\\|elpa/ivy-[0-9\.]+\\|elpa/counsel-[0-9\.]+\\|elpa/swiper-[0-9\.]+\\)")
 
 (defvar *fp-local-packages-directory* (expand-file-name "local" user-emacs-directory))
 
@@ -353,20 +397,47 @@
             (add-to-list 'load-path (expand-file-name package *fp-local-packages-directory*)))
 	'(
           ;; "magit/lisp"
-	  "misc"
+	  "el-misc"
+          "font-lock+"
           "org-mode/lisp"
           "org-board"
 	  "org-html-themes"
+          "org-protocol-capture-html"
           "org-ref"
           "org-reveal"
-          "pdf-tools/pdf-tools-0.70"
+          "ox-ipynb"
+          ;; "pdf-tools/pdf-tools-0.70"
 	  "ppd-sr-speedbar"
+          "spaceline"
           ;; "sly"
           "slime"
-          "swiper"
+          ;; "swiper"
           "sumatra-forward"
+          ;; "tablist"
           "undo-tree"
           ))
+
+;; http://emacs.stackexchange.com/a/26513/115
+(defun modi/package-dependency-check-ignore (orig-ret)
+  "Remove the `black listed packages' from ORIG-RET.
+Packages listed in the let-bound `pkg-black-list' will not be auto-installed
+even if they are found as dependencies.
+It is known that this advice is not effective when installed packages
+asynchronously using `paradox'. Below is effective on synchronous
+package installations."
+  (let ((pkg-black-list '(org slime swiper undo-tree org-ref org-reveal))
+        new-ret
+        pkg-name)
+    (dolist (pkg-struct orig-ret)
+      (setq pkg-name (package-desc-name pkg-struct))
+      (if (member pkg-name pkg-black-list)
+          (message (concat "Package `%s' will not be installed. "
+                           "See `modi/package-dependency-check-ignore'.")
+                   pkg-name)
+        ;; (message "Package to be installed: %s" pkg-name)
+        (push pkg-struct new-ret)))
+    new-ret))
+(advice-add 'package-compute-transaction :filter-return #'modi/package-dependency-check-ignore)
 
 
 ;; * Fixes
@@ -470,6 +541,11 @@ Lisp function does not specify a special indentation."
     (setq lisp-indent-function 'lisp-indent-function-kw)))
 
 
+;; ** Doc View
+
+(setq doc-view-odf->pdf-converter-program "c:/Program Files/LibreOffice 5/program/soffice.exe")
+(setq doc-view-odf->pdf-converter-function #'doc-view-odf->pdf-converter-soffice)
+
 ;; * Utilities
 
 (defmacro advise-commands (advice-name commands class &rest body)
@@ -488,6 +564,7 @@ The body of the advice is in BODY."
 ;; ** custom settings
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
+
 
 ;; ** abbrev
 (use-package abbrev
@@ -517,8 +594,21 @@ The body of the advice is in BODY."
 (use-package ag
   :ensure t)
 
+;; ** all-the-icons
+(use-package all-the-icons-dired
+  :ensure t
+  :after (all-the-icons))
+(use-package all-the-icons
+  :ensure t
+  :config
+  (require 'font-lock+)
+  )
+
 ;; ** auto-complete
-;; (use-package auto-complete)
+(use-package auto-complete
+  :ensure t
+  :config
+  (setq ac-comphist-file (expand-file-name "ac-comphist.dat" fp-config-savefile-dir)))
 
 
 ;; ** auto-revert
@@ -527,12 +617,12 @@ The body of the advice is in BODY."
   :ensure nil
   :pin manual
   :config
-  (global-auto-revert-mode t)
   (setq global-auto-revert-non-file-buffers t)
   (setq auto-revert-verbose nil)
   (setq auto-revert-use-notify t)
   ;; Possibly set files to ignore
   ;; (setq global-auto-revert-ignore-modes ())
+  (global-auto-revert-mode t)
   )
 
 ;; ** avy
@@ -550,21 +640,22 @@ The body of the advice is in BODY."
 
 ;; ** anzu
 ;; anzu-mode enhances isearch & query-replace by showing total matches and current match position
-;; (use-package anzu
-;;   :ensure t
-;;   :diminish anzu-mode
-;;   :config
-;;   (global-anzu-mode)
-;;   :bind
-;;   (("M-%" . anzu-query-replace)
-;;    ("C-M-%" . anzu-query-replace-regexp)))
+(use-package anzu
+  :ensure t
+  :diminish anzu-mode
+  :config
+  (setq anzu-cons-mode-line-p nil)
+  (global-anzu-mode)
+  :bind
+  (("M-%" . anzu-query-replace)
+   ("C-M-%" . anzu-query-replace-regexp)))
 
 ;; ** beacon
-(use-package beacon
-  :ensure t
-  :config
-  (beacon-mode +1)
-  )
+;; (use-package beacon
+;;   :ensure t
+;;   :config
+;;   (beacon-mode +1)
+;;   )
 
 ;; ** bookmark
 (use-package bookmark
@@ -592,7 +683,6 @@ The body of the advice is in BODY."
 (use-package company
   :ensure t
   :diminish company-mode
-  :defer t
   :config
   (add-hook 'after-init-hook 'global-company-mode)
   (setq company-idle-delay 0)
@@ -603,7 +693,6 @@ The body of the advice is in BODY."
 
 (use-package company-statistics
   :ensure t
-  :defer t
   :config
   (setq company-statistics-file
         (expand-file-name "company-statistics-file" fp-config-savefile-dir)))
@@ -626,11 +715,12 @@ The body of the advice is in BODY."
 
 
 ;; ** diff-hl
-(use-package diff-hl
-  :ensure t
-  :config
-  (global-diff-hl-mode +1)
-  )
+;; (use-package diff-hl
+;;   :ensure t
+;;   :config
+(add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+;;   (global-diff-hl-mode +1)
+;;   )
 
 ;; ** dired
 (use-package dired
@@ -689,17 +779,39 @@ The body of the advice is in BODY."
       ad-do-it))
 
   (ad-activate 'dired-run-shell-command)
-  (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
+  ;;  (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
 
+  (defun copy-buffer-file-name-as-kill (choice)
+    "Copy the buffer-file-name to the kill-ring"
+    (interactive "cCopy Buffer Name (F) Full, (D) Directory, (N) Name")
+    (let ((new-kill-string)
+          (name (if (eq major-mode 'dired-mode)
+                    (dired-get-filename)
+                  (or (buffer-file-name) ""))))
+      (cond ((eq choice ?f)
+             (setq new-kill-string name))
+            ((eq choice ?d)
+             (setq new-kill-string (file-name-directory name)))
+            ((eq choice ?n)
+             (setq new-kill-string (file-name-nondirectory name)))
+            (t (message "Quit")))
+      (when new-kill-string
+        (message "%s copied" new-kill-string)
+        (kill-new new-kill-string))))
+
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
   )
 
 
 ;; ** dired+
 (use-package dired+
-  :ensure t)
+  :ensure t
+  :config
+  (global-dired-hide-details-mode -1)
+  )
 
 ;; ** dired-x
-;; enable some really cool extensions like C-x C-j(dired-jump)
+;; enable some really cool extensions like C-x C-j (dired-jump)
 (use-package dired-x
   :ensure nil
   :pin manual)
@@ -709,18 +821,18 @@ The body of the advice is in BODY."
   :ensure t)
 
 ;; ** doc-view
-(use-package doc-view
-  :config
-  (add-hook 'doc-view-mode-hook (lambda () (centered-cursor-mode -1)))
-  (define-key doc-view-mode-map (kbd "<right>") 'doc-view-next-page)
-  (define-key doc-view-mode-map (kbd "<left>") 'doc-view-previous-page)
-  (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-  (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+;; (use-package doc-view
+;;   :config
+;;   (add-hook 'doc-view-mode-hook (lambda () (centered-cursor-mode -1)))
+;;   (define-key doc-view-mode-map (kbd "<right>") 'doc-view-next-page)
+;;   (define-key doc-view-mode-map (kbd "<left>") 'doc-view-previous-page)
+;;   (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+;;   (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
 
-  (global-set-key (kbd "C-<wheel-up>") 'doc-view-enlarge)
-  (global-set-key (kbd "C-<wheel-down>") 'doc-view-shrink)
+;;   (global-set-key (kbd "C-<wheel-up>") 'doc-view-enlarge)
+;;   (global-set-key (kbd "C-<wheel-down>") 'doc-view-shrink)
 
-  (setq doc-view-continuous t))
+;;   (setq doc-view-continuous t))
 
 ;; ** easy-kill
 (use-package easy-kill
@@ -749,6 +861,18 @@ The body of the advice is in BODY."
   :bind (("C-=" . er/expand-region))
   :ensure t)
 
+;; ** eyebrowse
+;; (use-package eyebrowse
+;;   :diminish eyebrowse-mode
+;;   :config (progn
+;;             (define-key eyebrowse-mode-map (kbd "M-1") 'eyebrowse-switch-to-window-config-1)
+;;             (define-key eyebrowse-mode-map (kbd "M-2") 'eyebrowse-switch-to-window-config-2)
+;;             (define-key eyebrowse-mode-map (kbd "M-3") 'eyebrowse-switch-to-window-config-3)
+;;             (define-key eyebrowse-mode-map (kbd "M-4") 'eyebrowse-switch-to-window-config-4)
+;;             (define-key eyebrowse-mode-map (kbd "S-s-<right>") 'eyebrowse-next-window-config)
+;;             (define-key eyebrowse-mode-map (kbd "S-s-<left>") 'eyebrowse-prev-window-config)
+;;             (setq eyebrowse-new-workspace t)))
+
 ;; ** flycheck
 (use-package flycheck
   :ensure t)
@@ -760,18 +884,20 @@ The body of the advice is in BODY."
   :config
   (setenv "LANG" "en_US")
   ;; (setenv "DICPATH" (concat ".;" (expand-file-name "../etc/hunspell" exec-directory))) ;;
+  (setenv "DICPATH" "c:/Local/MSys64/mingw64/share/hunspell") ;;
   (setq ispell-program-name "hunspell.exe"
         ispell-dictionary "en_US"
         ispell-extra-args '("--sug-mode=ultra"))
   )
 
 ;; ** framemove
-(use-package framemove
-  :ensure t
-  :config
-  ;; FIXME: does this load windmove?
-  (setq framemove-hook-into-windmove t)
-  )
+;; DEPRECATED, not available on ELPA anymore
+;; (use-package framemove
+;;   :ensure t
+;;   :config
+;;   ;; FIXME: does this load windmove?
+;;   (setq framemove-hook-into-windmove t)
+;;   )
 
 ;; ** gist
 (use-package gist
@@ -785,17 +911,52 @@ The body of the advice is in BODY."
 (use-package gitconfig-mode
   :ensure t)
 
-;; ** gitconfig-mode
+;; ** gitignore-mode
 (use-package gitignore-mode
   :ensure t)
+
+;; ** helpful
+(use-package helpful
+  :ensure t)
+
+;; ** FIXME git-gutter
+;; (use-package git-gutter
+;;   :ensure t
+;;   :config
+;;   ;; If you enable global minor mode
+;;   ;; (global-git-gutter-mode t)
+
+;;   ;; If you would like to use git-gutter.el and linum-mode
+;;   (git-gutter:linum-setup)
+  
+;;   ;; If you enable git-gutter-mode for some modes
+;;   ;; (add-hook 'ruby-mode-hook 'git-gutter-mode)
+;;   ;; (add-hook 'python-mode-hook 'git-gutter-mode)
+  
+;;   (global-set-key (kbd "C-x C-g") 'git-gutter)
+;;   (global-set-key (kbd "C-x v =") 'git-gutter:popup-hunk)
+  
+;;   ;; Jump to next/previous hunk
+;;   (global-set-key (kbd "C-x p") 'git-gutter:previous-hunk)
+;;   (global-set-key (kbd "C-x n") 'git-gutter:next-hunk)
+  
+;;   ;; Stage current hunk
+;;   (global-set-key (kbd "C-x v s") 'git-gutter:stage-hunk)
+  
+;;   ;; Revert current hunk
+;;   (global-set-key (kbd "C-x v r") 'git-gutter:revert-hunk)
+  
+;;   ;; Mark current hunk
+;;   (global-set-key (kbd "C-x v SPC") #'git-gutter:mark-hunk)
+;;   )
 
 ;; ** god-mode
 (use-package god-mode
   :ensure t)
 
 ;; ** grizzl
-(use-package grizzl
-  :ensure t)
+;; (use-package grizzl
+;;   :ensure t)
 
 ;; ** guru-mode
 (use-package guru-mode
@@ -804,7 +965,8 @@ The body of the advice is in BODY."
 ;; ** highlight-symbol
 (use-package highlight-symbol
   :ensure t)
-
+
+;; ** hippie-exp
 ;; hippie expand is dabbrev expand on steroids
 (use-package hippie-exp
   :ensure t
@@ -832,86 +994,91 @@ The body of the advice is in BODY."
   :ensure t)
 
 ;; ** hungry-delete
-                                        ; deletes all the whitespace when you hit backspace or delete
-(use-package hungry-delete
-  :ensure t
-  :config
-  (global-hungry-delete-mode))
+
+;;; deletes all the whitespace when you hit backspace or delete
+;; (use-package hungry-delete
+;;   :ensure t
+;;   :config
+;;   (global-hungry-delete-mode))
 
 ;; ** ido
-;; (use-package ido
-;;   :ensure t
-;;   :config
-;;   (setq ido-enable-prefix nil
-;;         ido-enable-flex-matching t
-;;         ido-create-new-buffer 'always
-;;         ido-use-filename-at-point 'guess
-;;         ido-max-prospects 10
-;;         ido-save-directory-list-file (expand-file-name "ido.hist" fp-config-savefile-dir)
-;;         ido-default-buffer-method 'selected-window
-;;         ido-default-file-method 'selected-window
-;;         ido-auto-merge-work-directories-length 0
-;;         ido-everywhere t
-;;         ido-max-directory-size 100000)
+(use-package ido
+  :ensure t
+  :config
+  (setq ido-enable-prefix nil
+        ido-enable-flex-matching t
+        ido-create-new-buffer 'always
+        ido-use-filename-at-point 'guess
+        ido-use-url-at-point nil
+        ido-max-prospects 10
+        ido-save-directory-list-file (expand-file-name "ido.hist" fp-config-savefile-dir)
+        ido-default-buffer-method 'selected-window
+        ido-default-file-method 'selected-window
+        ido-auto-merge-work-directories-length 0
+        ido-max-directory-size 100000
+        ido-file-extensions-order '(".org" ".txt" "*.tex" ".py" ".emacs" ".xml" ".el" ".ini" ".cfg" ".cnf")
+        )
 
-;;   (ido-mode +1))
-
-;; ** ido-ubiquitous
-;; (use-package ido-ubiquitous
-;;   :ensure t
-;;   :config
-;;   (ido-ubiquitous-mode +1))
-
-;; ** ido-vertical-mode
-;; (use-package ido-vertical-mode
-;;   :ensure t
-;;   :config
-;;   (ido-vertical-mode +1))
-
-;; ** flx-ido
+  (ido-mode +1)
+  (ido-everywhere +1) 
+  ;; ** ido-ubiquitous
+  (use-package ido-completing-read+
+    :ensure t
+    :config
+    (ido-ubiquitous-mode +1))
+  
+  ;; ** ido-vertical-mode
+  (use-package ido-vertical-mode
+    :ensure t
+    :config
+    (ido-vertical-mode +1))
+  
+  ;; ** flx-ido
 ;;; smarter fuzzy matching for ido
-;; (use-package flx-ido
-;;   :ensure t
-;;   :config
-;;   (flx-ido-mode +1)
-;;   ;; disable ido faces to see flx highlights
-;;   (setq ido-use-faces nil)
-;;   )
-
-;; ** ido-hacks
-;; (use-package ido-hacks)
+  (use-package flx-ido
+    :ensure t
+    :config
+    (flx-ido-mode +1)
+    ;; disable ido faces to see flx highlights
+    (setq ido-use-faces nil)
+    )
+  
+  ;; ** ido-hacks
+  ;; (use-package ido-hacks
+  ;;   :ensure t)
+  )
 
 ;; ** ivy/counsel/swiper
-(use-package flx :ensure t)
-(use-package ivy
-  :ensure t
-  :diminish (ivy-mode)
-  :bind (("C-x b" . ivy-switch-buffer))
-  :config
-  (ivy-mode 1)
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-display-style 'fancy))
-(use-package counsel
-  :ensure t
-  :bind (("M-x" . counsel-M-x)
-         ("C-h v" . counsel-describe-variable)
-         ("C-h f" . counsel-describe-function))
-  :config
-  ;; miz fuzzy with plus (.* for each space)
-  ;; http://oremacs.com/2016/01/06/ivy-flx/
-  (setq ivy-re-builders-alist
-      '((t . ivy--regex-fuzzy)))
-  (setq ivy-initial-inputs-alist nil))
-(use-package swiper
-  :ensure t
-  :bind (("C-s" . swiper)
-         ("C-c u" . swiper-all)))
+;; (use-package flx :ensure t)
+;; (use-package ivy
+;;   :ensure t
+;;   :diminish (ivy-mode)
+;;   :bind (("C-x b" . ivy-switch-buffer))
+;;   :config
+;;   (ivy-mode 1)
+;;   (setq ivy-use-virtual-buffers t)
+;;   (setq ivy-display-style 'fancy))
+;; (use-package counsel
+;;   :ensure t
+;;   :bind (("M-x" . counsel-M-x)
+;;          ("C-h v" . counsel-describe-variable)
+;;          ("C-h f" . counsel-describe-function))
+;;   :config
+;;   ;; miz fuzzy with plus (.* for each space)
+;;   ;; http://oremacs.com/2016/01/06/ivy-flx/
+;;   (setq ivy-re-builders-alist
+;;       '((t . ivy--regex-fuzzy)))
+;;   (setq ivy-initial-inputs-alist nil))
+;; (use-package swiper
+;;   :ensure t
+;;   :bind (("C-s" . swiper)
+;;          ("C-c u" . swiper-all)))
 
 ;; ** image-dired
 (use-package image-dired
-	     :defer t
-	     :config
-	     (setq image-dired-dir (expand-file-name "image-dired/" temporary-file-directory)))
+  :ensure t
+  :config
+  (setq image-dired-dir (expand-file-name "image-dired/" temporary-file-directory)))
 
 ;; ** imenu-anywhere
 (use-package imenu-anywhere
@@ -925,15 +1092,23 @@ The body of the advice is in BODY."
 (use-package key-chord
   :ensure t
   :after (org tex-site)
-  :defer 10
+  ;; :defer 10
   :config
   (key-chord-mode 1)
   (setq key-chord-two-keys-delay 0.1)
-  (key-chord-define-global "]]" "\\")
-  (key-chord-define-global ";;" "/")
-  (key-chord-define-global "::" "?")
-  (key-chord-define-global "}}" "|"))
-;; ** lua-mode
+  ;; (key-chord-define-global "]]" "\\")
+  ;; (key-chord-define-global ";;" "/")
+  ;; (key-chord-define-global "::" "?")
+  ;; (key-chord-define-global "}}" "|")
+  )
+
+;; ** langtool
+(use-package langtool
+  :ensure t
+  :config
+  (setq langtool-language-tool-jar "c:/Local/LanguageTool-3.4/languagetool-commandline.jar"
+        langtool-java-bin "c:/Program Files/Java/jre1.8.0_121/bin/java.exe"))
+;; ** lua-mode
 (use-package lua-mode
   :ensure t)
 
@@ -945,8 +1120,11 @@ The body of the advice is in BODY."
   :config
   (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
 
+  (if ido-everywhere
+      (setq magit-completing-read-function 'magit-ido-completing-read))
+  
   ;;This setting is needed to use ivy completion:
-  (setq magit-completing-read-function 'ivy-completing-read)
+  ;; (setq magit-completing-read-function 'ivy-completing-read)
 
   ;; full screen magit-status
   (defadvice magit-status (around magit-fullscreen activate)
@@ -966,12 +1144,13 @@ The body of the advice is in BODY."
           (replace-regexp-in-string  "^\\([c-z]\\):/\\1/" "\\1:/" ad-do-it))
     )
   (ad-activate 'magit-expand-git-file-name)
-  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  ;; (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
   )
 
 ;; ** magithub
 (use-package magithub
-  :ensure t)
+  :after magit
+  :config (magithub-feature-autoinject t))
 
 ;; ** markdown-mode
 ;;(use-package markdown-mode)
@@ -1001,10 +1180,19 @@ The body of the advice is in BODY."
 ;;   )
 
 ;; ** oauth2
+
 (use-package oauth2
   :ensure t
+  :init
+  (defvar oauth--token-data)
+  (defvar url-http-method)
+  (defvar url-http-data)
+  (defvar url-http-extra-headers)
+  (defvar url-callback-function)
+  (defvar url-callback-arguments)
   :config
   (setq oauth2-token-file (expand-file-name "oauth2.plstore" fp-config-savefile-dir)))
+
 
 ;; ** operate-on-number
 (use-package operate-on-number
@@ -1027,23 +1215,24 @@ The body of the advice is in BODY."
 
   ;; * Fix outshine version outshine-20141221.1805
 
-  (defun outline-hide-sublevels (keep-levels)
-    "Hide everything except the first KEEP-LEVEL headers."
-    (interactive "p")
-    (if (< keep-levels 1)
-        (error "Must keep at least one level of headers"))
-    (setq keep-levels (1- keep-levels))
-    (save-excursion
-      (goto-char (point-min))
-      ;; Skip the prelude, if any.
-      (unless (outline-on-heading-p t) (outline-next-heading))
-      (hide-subtree)
-      (show-children keep-levels)
-      (condition-case err
-          (while (outline-get-next-sibling)
-            (hide-subtree)
-            (show-children keep-levels))
-        (error nil)))))
+  ;; (defun outline-hide-sublevels (keep-levels)
+  ;;   "Hide everything except the first KEEP-LEVEL headers."
+  ;;   (interactive "p")
+  ;;   (if (< keep-levels 1)
+  ;;       (error "Must keep at least one level of headers"))
+  ;;   (setq keep-levels (1- keep-levels))
+  ;;   (save-excursion
+  ;;     (goto-char (point-min))
+  ;;     ;; Skip the prelude, if any.
+  ;;     (unless (outline-on-heading-p t) (outline-next-heading))
+  ;;     (hide-subtree)
+  ;;     (show-children keep-levels)
+  ;;     (condition-case err
+  ;;         (while (outline-get-next-sibling)
+  ;;           (hide-subtree)
+  ;;           (show-children keep-levels))
+  ;;       (error nil))))
+  )
 
 
 ;; ** ov
@@ -1061,19 +1250,52 @@ The body of the advice is in BODY."
   :ensure t
   :config
   (setq pcache-directory
-        (let ((dir (expand-file-name "pcache/" fp-config-savefile-dir)))
+        (let ((dir (locate-user-emacs-file "var/pcache/")))
           (make-directory dir t)
           dir)))
 
 ;; ** pdf-tools
+
+;; wrapper for save-buffer ignoring arguments
+(defun fp/save-buffer-no-args ()
+  "Save buffer ignoring arguments"
+  (save-buffer))
+
 (use-package pdf-tools
   :ensure t
   :mode ("\\.pdf\\'" . pdf-tools-install)
-  :bind ("C-c C-g" . pdf-sync-forward-search)
-  :defer t
+  :bind (("C-c C-g" . pdf-sync-forward-search)
+         :map pdf-view-mode-map
+         ("M-w" . pdf-view-kill-ring-save)
+         ([C-insert] . pdf-view-kill-ring-save)
+         ("h" . pdf-annot-add-highlight-markup-annotation)
+         ("t" . pdf-annot-add-text-annotation)
+         ("D" . pdf-annot-delete))
   :config
-  (setq mouse-wheel-follow-mouse t)
-  (setq pdf-view-resize-factor 1.10))
+
+  (setq-default pdf-view-display-size 'fit-page)
+  ;; automatically annotate highlights
+  (setq pdf-annot-activate-created-annotations t)
+  ;; use isearch instead of swiper
+  (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
+  ;; turn off cua so copy works
+  (add-hook 'pdf-view-mode-hook (lambda () (cua-mode 0)))
+  ;; more fine-grained zooming
+  (setq pdf-view-resize-factor 1.1)
+  ;; wait until map is available
+  (with-eval-after-load "pdf-annot"
+    (define-key pdf-annot-edit-contents-minor-mode-map (kbd "<S-return>") 'pdf-annot-edit-contents-commit)
+    (define-key pdf-annot-edit-contents-minor-mode-map (kbd "<return>") 'newline)
+    ;; save after adding comment
+    (advice-add 'pdf-annot-edit-contents-commit :after 'fp/save-buffer-no-args)))
+  
+;; http://pragmaticemacs.com/emacs/even-more-pdf-tools-tweaks/
+
+(use-package org-pdfview
+  :ensure t)
+
+;; ** perspective
+;; (use-package perspective)
 
 ;; ** popup
 (use-package popup)
@@ -1081,7 +1303,6 @@ The body of the advice is in BODY."
 ;; ** popwin
 (use-package popwin
   :ensure t
-  :defer 5
   :config
   (popwin-mode 1))
 
@@ -1091,9 +1312,9 @@ The body of the advice is in BODY."
   :pin manual
   :config
   ;; It can help sometimes to be able to print source code!
-  (setenv "GS_LIB" "C:/Local/gs9.15/lib;C:/Local/gs9.15/fonts")
+  ;; (setenv "GS_LIB" "C:/Local/gs9.15/lib;C:/Local/gs9.15/fonts")
   (setq ps-printer-name t)
-  (setq ps-lpr-command "C:/Local/gs9.15/bin/gswin64c.exe")
+  (setq ps-lpr-command "gswin32c.exe")
   (setq ps-lpr-switches '("-q" "-dNOPAUSE" "-dBATCH"
                           "-sDEVICE=mswinpr2"
                           "-sPAPERSIZE=a4"))
@@ -1116,9 +1337,9 @@ The body of the advice is in BODY."
   (setq projectile-cache-file (expand-file-name  "projectile.cache" fp-config-savefile-dir)
         projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" fp-config-savefile-dir))
 
-                                        ;So projectile works with ido (or ivy)
-  ;; (setq projectile-completion-system 'ido)
-  (setq projectile-completion-system 'ivy)
+  ;; So projectile works with ido (or ivy)
+  (setq projectile-completion-system 'ido)
+  ;; (setq projectile-completion-system 'ivy)
 
   (setq projectile-indexing-method 'alien)
   (projectile-global-mode)
@@ -1129,7 +1350,6 @@ The body of the advice is in BODY."
 ;; ** rainbow delimiters
 (use-package rainbow-delimiters
   :ensure t
-  :defer t
   :diminish rainbow-mode
   :config
   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
@@ -1238,7 +1458,10 @@ The body of the advice is in BODY."
 
   ;; You can choose to show previews literally, or through find-file, toggled by zi.
 
-  (setq ranger-show-literal t)
+  (setq ranger-show-literal nil)
+
+  (setq ranger-preview-delay-time 0.07)
+  (setq ranger-setup-preview-delay-timer nil)
 
   ;; You can set the size of the preview windows as a fraction of the frame size.
 
@@ -1256,11 +1479,15 @@ The body of the advice is in BODY."
 
   ;; The preview function is also able to determine if the file selected is a binary file. If set to t, these files will not be previewed.
   ;; (setq ranger-dont-show-binary t)
+
+  ;; Fix the masks for the elisp internal implementation of ls
+  (setq ranger-dired-display-mask '(t t t t t t t)
+        ranger-dired-hide-mask '(nil nil nil nil nil nil t))
   )
 
 ;; ** re-builder
 (use-package re-builder
-  :defer t
+  :ensure t
   :config
   (setq reb-re-syntax 'string)
   )
@@ -1289,6 +1516,13 @@ The body of the advice is in BODY."
 
   (recentf-mode +1)
   )
+
+;; ** request
+;; Not even sure about who is using it?
+(use-package request
+  :ensure t
+  :config
+  (setq request-storage-directory (locate-user-emacs-file "var/request/")))
 
 ;; ** sanityinc-tomorrow theme
 (use-package color-theme-sanityinc-tomorrow
@@ -1330,9 +1564,9 @@ The body of the advice is in BODY."
   :pin manual
   :config
   ;; Launch emacs server
-  ;; Annoying to change location of authentication file
-  ;; It will require emacsclient to be aware of it.
-  (setq server-auth-dir (expand-file-name "server/" fp-config-savefile-dir))
+  ;; It is annoying to change location of authentication file
+  ;; because it requires emacsclient to be aware of it.
+  (setq server-auth-dir (locate-user-emacs-file "var/server/"))
   (defadvice server-visit-files (before parse-numbers-in-lines (files proc &optional nowait) activate)
     "Open file with emacsclient with cursors positioned on requested line.
 Most of console-based utilities prints filename in format
@@ -1366,240 +1600,29 @@ and file 'filename' will be opened and cursor set on line 'linenumber'"
 
 ;; ** smex
 ;;; smex, remember recently and most frequently used commands
-;; (use-package smex
-;;   :ensure t
-;;   :config
-;;   (setq smex-save-file (expand-file-name "smex-items" fp-config-savefile-dir))
-;;   (smex-initialize)
-;;   :bind
-;;   (("M-x" . smex)
-;;    ("C-x C-m" . smex)
-;;    ("M-X" . smex-major-mode-commands)))
+(use-package smex
+  :ensure t
+  :config
+  (setq smex-save-file (expand-file-name "smex-items" fp-config-savefile-dir))
+  (smex-initialize)
+  :bind
+  (("M-x" . smex)
+   ("C-x C-m" . smex)
+   ("M-X" . smex-major-mode-commands)))
 
 ;; ** smartparens
 ;; smart pairing for all
-(use-package smartparens-config
-  :ensure smartparens
-  :defer t
+
+(use-package smartparens
+  :ensure t
   :diminish smartparens-mode
-  :after (hydra)
   :config
-  (defun fp-sp-wrap-with (s)
-  "Create a wrapper function for smartparens using S."
-  `(lambda (&optional arg)
-     (interactive "P")
-     (sp-wrap-with-pair ,s)))
-
-  (setq sp-base-key-bindings 'paredit)
-                                        ; (setq sp-autoskip-closing-pair 'always)
-  (setq sp-hybrid-kill-entire-symbol nil)
-  (sp-use-paredit-bindings)
-  (smartparens-global-mode)
+  (require 'smartparens-config)
+  (smartparens-global-mode +1)
+  ;; (smartparens-strict-mode 0)
   (show-smartparens-global-mode +1)
-  (sp-local-pair 'org-mode "_" "_" )
-  (sp-local-pair 'org-mode "*" "*" )
-  (sp-local-pair 'latex-mode "$" "$" )
-  (sp-local-pair 'latex-mode "\\left(" "\\right)" :trigger "\\l(")
+  )
 
-;;; Keybinding management
-  (define-key smartparens-mode-map (kbd "C-M-b") 'sp-backward-sexp)
-
-  (define-key smartparens-mode-map (kbd "C-M-d") 'sp-down-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-a") 'sp-backward-down-sexp)
-  (define-key smartparens-mode-map (kbd "C-S-d") 'sp-beginning-of-sexp)
-  (define-key smartparens-mode-map (kbd "C-S-a") 'sp-end-of-sexp)
-
-  (define-key smartparens-mode-map (kbd "C-M-e") 'sp-up-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-u") 'sp-backward-up-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-t") 'sp-transpose-sexp)
-
-  (define-key smartparens-mode-map (kbd "C-M-n") 'sp-next-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-p") 'sp-previous-sexp)
-
-  (define-key smartparens-mode-map (kbd "C-M-k") 'sp-kill-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-w") 'sp-copy-sexp)
-
-  (define-key smartparens-mode-map (kbd "M-<delete>") 'sp-unwrap-sexp)
-  (define-key smartparens-mode-map (kbd "M-<backspace>") 'sp-backward-unwrap-sexp)
-
-  (define-key smartparens-mode-map (kbd "C-<right>") 'sp-forward-slurp-sexp)
-  (define-key smartparens-mode-map (kbd "C-<left>") 'sp-forward-barf-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-<left>") 'sp-backward-slurp-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-<right>") 'sp-backward-barf-sexp)
-
-  (define-key smartparens-mode-map (kbd "M-D") 'sp-splice-sexp)
-  (define-key smartparens-mode-map (kbd "C-M-<delete>") 'sp-splice-sexp-killing-forward)
-  (define-key smartparens-mode-map (kbd "C-M-<backspace>") 'sp-splice-sexp-killing-backward)
-  (define-key smartparens-mode-map (kbd "C-S-<backspace>") 'sp-splice-sexp-killing-around)
-
-  (define-key smartparens-mode-map (kbd "C-]") 'sp-select-next-thing-exchange)
-  (define-key smartparens-mode-map (kbd "C-<left_bracket>") 'sp-select-previous-thing)
-  (define-key smartparens-mode-map (kbd "C-M-]") 'sp-select-next-thing)
-
-  (define-key smartparens-mode-map (kbd "M-F") 'sp-forward-symbol)
-  (define-key smartparens-mode-map (kbd "M-B") 'sp-backward-symbol)
-
-  (bind-key "C-c f" (lambda () (interactive) (sp-beginning-of-sexp 2)) smartparens-mode-map)
-  (bind-key "C-c b" (lambda () (interactive) (sp-beginning-of-sexp -2)) smartparens-mode-map)
-
-  (bind-key "C-M-s"
-            (defhydra smartparens-hydra ()
-              "Smartparens"
-              ("d" sp-down-sexp "Down")
-              ("e" sp-up-sexp "Up")
-              ("u" sp-backward-up-sexp "Up")
-              ("a" sp-backward-down-sexp "Down")
-              ("f" sp-forward-sexp "Forward")
-              ("b" sp-backward-sexp "Backward")
-              ("k" sp-kill-sexp "Kill" :color blue)
-              ("q" nil "Quit" :color blue))
-            smartparens-mode-map)
-
-  (bind-key "H-t" 'sp-prefix-tag-object smartparens-mode-map)
-  (bind-key "H-p" 'sp-prefix-pair-object smartparens-mode-map)
-  (bind-key "H-y" 'sp-prefix-symbol-object smartparens-mode-map)
-  (bind-key "H-h" 'sp-highlight-current-sexp smartparens-mode-map)
-  (bind-key "H-e" 'sp-prefix-save-excursion smartparens-mode-map)
-  (bind-key "H-s c" 'sp-convolute-sexp smartparens-mode-map)
-  (bind-key "H-s a" 'sp-absorb-sexp smartparens-mode-map)
-  (bind-key "H-s e" 'sp-emit-sexp smartparens-mode-map)
-  (bind-key "H-s p" 'sp-add-to-previous-sexp smartparens-mode-map)
-  (bind-key "H-s n" 'sp-add-to-next-sexp smartparens-mode-map)
-  (bind-key "H-s j" 'sp-join-sexp smartparens-mode-map)
-  (bind-key "H-s s" 'sp-split-sexp smartparens-mode-map)
-  (bind-key "H-s r" 'sp-rewrap-sexp smartparens-mode-map)
-  (defvar hyp-s-x-map)
-  (define-prefix-command 'hyp-s-x-map)
-  (bind-key "H-s x" hyp-s-x-map smartparens-mode-map)
-  (bind-key "H-s x x" 'sp-extract-before-sexp smartparens-mode-map)
-  (bind-key "H-s x a" 'sp-extract-after-sexp smartparens-mode-map)
-  (bind-key "H-s x s" 'sp-swap-enclosing-sexp smartparens-mode-map)
-
-  (bind-key "C-x C-t" 'sp-transpose-hybrid-sexp smartparens-mode-map)
-
-  (bind-key ";" 'sp-comment emacs-lisp-mode-map)
-
-  (bind-key [remap c-electric-backspace] 'sp-backward-delete-char smartparens-strict-mode-map)
-
-
-;;; Pair management
-
-  (sp-local-pair 'minibuffer-inactive-mode "'" nil :actions nil)
-  (bind-key "C-(" 'sp---wrap-with-40 minibuffer-local-map)
-
-;;; Markdown-mode
-
-  (sp-with-modes '(markdown-mode gfm-mode rst-mode)
-    (sp-local-pair "*" "*"
-                   :wrap "C-*"
-                   :unless '(sp-point-after-word-p sp-point-at-bol-p)
-                   :post-handlers '(("[d1]" "SPC"))
-                   :skip-match 'sp--gfm-skip-asterisk)
-    (sp-local-pair "**" "**")
-    (sp-local-pair "_" "_" :wrap "C-_" :unless '(sp-point-after-word-p)))
-
-  (defun sp--gfm-skip-asterisk (ms mb me)
-    (save-excursion
-      (goto-char mb)
-      (save-match-data (looking-at "^\\* "))))
-
-;;; Org-mode
-
-  (sp-with-modes 'org-mode
-    (sp-local-pair "*" "*" :actions '(insert wrap) :unless '(sp-point-after-word-p sp-point-at-bol-p) :wrap "C-*" :skip-match 'sp--org-skip-asterisk)
-    (sp-local-pair "_" "_" :unless '(sp-point-after-word-p) :wrap "C-_")
-    (sp-local-pair "/" "/" :unless '(sp-point-after-word-p) :post-handlers '(("[d1]" "SPC")))
-    (sp-local-pair "~" "~" :unless '(sp-point-after-word-p) :post-handlers '(("[d1]" "SPC")))
-    (sp-local-pair "=" "=" :unless '(sp-point-after-word-p) :post-handlers '(("[d1]" "SPC")))
-    (sp-local-pair "«" "»"))
-
-  (defun sp--org-skip-asterisk (ms mb me)
-    (or (and (= (line-beginning-position) mb)
-             (eq 32 (char-after (1+ mb))))
-        (and (= (1+ (line-beginning-position)) me)
-             (eq 32 (char-after me)))))
-
-;;; TeX-mode LaTeX-mode
-
-  (sp-with-modes '(tex-mode plain-tex-mode latex-mode)
-    (sp-local-tag "i" "\"<" "\">"))
-
-;;; Lisp modes
-
-  (sp-with-modes sp--lisp-modes
-    (sp-local-pair "(" nil
-                   :wrap "C-("
-                   :pre-handlers '(my-add-space-before-sexp-insertion)
-                   :post-handlers '(my-add-space-after-sexp-insertion)))
-
-
-
-  (defun my-add-space-after-sexp-insertion (id action _context)
-    (when (eq action 'insert)
-      (save-excursion
-        (forward-char (sp-get-pair id :cl-l))
-        (when (or (eq (char-syntax (following-char)) ?w)
-                  (looking-at (sp--get-opening-regexp)))
-          (insert " ")))))
-
-  (defun my-add-space-before-sexp-insertion (id action _context)
-    (when (eq action 'insert)
-      (save-excursion
-        (backward-char (length id))
-        (when (or (eq (char-syntax (preceding-char)) ?w)
-                  (and (looking-back (sp--get-closing-regexp))
-                       (not (eq (char-syntax (preceding-char)) ?'))))
-          (insert " ")))))
-
-;;; C++
-
-  (sp-with-modes '(malabar-mode c++-mode)
-    (sp-local-pair "{" nil :post-handlers '(("||\n[i]" "RET"))))
-  (sp-local-pair 'c++-mode "/*" "*/" :post-handlers '((" | " "SPC")
-                                                      ("* ||\n[i]" "RET")))
-
-;;; PHP
-
-  (sp-with-modes '(php-mode)
-    (sp-local-pair "/**" "*/" :post-handlers '(("| " "SPC")
-                                               (my-php-handle-docstring "RET")))
-    (sp-local-pair "/*." ".*/" :post-handlers '(("| " "SPC")))
-    (sp-local-pair "{" nil :post-handlers '(("||\n[i]" "RET")))
-    (sp-local-pair "(" nil :prefix "\\(\\sw\\|\\s_\\)*"))
-
-  (defun my-php-handle-docstring (&rest _ignored)
-    (-when-let (line (save-excursion
-                       (forward-line)
-                       (thing-at-point 'line)))
-      (cond
-       ((string-match-p "function" line)
-        (save-excursion
-          (insert "\n")
-          (let ((args (save-excursion
-                        (forward-line)
-                        (my-php-get-function-args))))
-            (--each args
-              (insert (format "* @param %s\n" it)))))
-        (insert "* "))
-       ((string-match-p ".*class\\|interface" line)
-        (save-excursion (insert "\n*\n* @author\n"))
-        (insert "* ")))
-      (let ((o (sp--get-active-overlay)))
-        (indent-region (overlay-start o) (overlay-end o)))))
-
-  (defun conditionally-enable-smartparens-mode ()
-  "Enable `smartparens-mode' in the minibuffer, during `eval-expression'."
-  (if (eq this-command 'eval-expression)
-      (smartparens-mode 1)))
-
-  (add-hook 'minibuffer-setup-hook 'conditionally-enable-smartparens-mode)
-
-;; :bind (:map prog-mode-map
-;;              ("M-(" .  (fp-config-wrap-with "("))
-;;              ;; FIXME: pick terminal friendly binding
-;;              ;; (define-key prog-mode-map (kbd "M-[") (fp-config-wrap-with "["))
-;;              ("M-\"" . (fp-config-wrap-with "\"")))
-)
 
 ;; ** smartrep
 (use-package smartrep
@@ -1619,6 +1642,13 @@ and file 'filename' will be opened and cursor set on line 'linenumber'"
       ("'" . operate-on-number-at-point)))
 
   )
+
+;; ** spaceline
+(use-package spaceline
+  :ensure t
+  :config
+  (require 'spaceline-config)
+  (spaceline-spacemacs-theme))
 
 ;; ** ssh
 (use-package ssh
@@ -1679,6 +1709,50 @@ set the hook `comint-input-sender'."
         )
   )
 
+;; ** treemacs
+(use-package treemacs
+  :ensure t
+  :defer t
+  :config
+  (progn
+    ;; (use-package treemacs-evil
+    ;;   :ensure t
+    ;;   :demand t)
+    (setq treemacs-follow-after-init          t
+          treemacs-width                      35
+          treemacs-indentation                2
+          treemacs-git-integration            t
+          treemacs--persist-file              (expand-file-name "treemacs-persist" fp-config-savefile-dir)
+          treemacs-collapse-dirs              (if (executable-find "python") 3 0)
+          treemacs-silent-refresh             nil
+          treemacs-change-root-without-asking nil
+          treemacs-sorting                    'alphabetic-desc
+          treemacs-show-hidden-files          t
+          treemacs-never-persist              nil
+          treemacs-is-never-other-window      nil
+          treemacs-goto-tag-strategy          'refetch-index)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t))
+  :bind
+  (:map global-map
+        ;; ([f8]         . treemacs-toggle)
+        ("M-0"        . treemacs-select-window)
+        ("C-c 1"      . treemacs-delete-other-windows)
+        ("C-c ft"     . treemacs-toggle)
+        ("C-c fT"     . treemacs)
+        ("C-c fB"     . treemacs-bookmark)
+        ("C-c f C-t"  . treemacs-find-file)
+        ("C-c f M-t"  . treemacs-find-tag)))
+;; (use-package treemacs-projectile
+;;   :defer t
+;;   :ensure t
+;;   :config
+;;   (setq treemacs-header-function #'treemacs-projectile-create-header)
+;;   :bind (:map global-map
+;;               ("C-c fP" . treemacs-projectile)
+;;               ("C-c fp" . treemacs-projectile-toggle)))
+
 ;; ** undo-tree
 (use-package undo-tree
   :ensure nil
@@ -1693,6 +1767,13 @@ set the hook `comint-input-sender'."
   (global-undo-tree-mode)
   :bind (("C-z" . undo-tree-undo)
          ("C-S-z" . undo-tree-redo)))
+
+;; ** unfill
+(use-package unfill
+  :ensure t
+  :commands (unfill-paragraph
+             unfill-region)
+  :bind ("M-Q" . unfill-paragraph))
 
 ;; ** uniquify
 ;; meaningful names for buffers with the same name
@@ -1721,6 +1802,21 @@ set the hook `comint-input-sender'."
   :config
   (volatile-highlights-mode t)
   )
+
+;; ** wgrep
+(use-package wgrep
+  :ensure t
+  :config
+  (setq wgrep-auto-save-buffer t)
+  ; (setq wgrep-change-readonly-file t)
+  )
+(use-package wgrep-ag
+  :ensure t
+  :requires ag
+  :config
+  (add-hook 'ag-mode-hook 'wgrep-ag-setup)
+  )
+
 
 ;; ** which-func
 (use-package which-func
@@ -1764,7 +1860,9 @@ set the hook `comint-input-sender'."
   :ensure nil
   :pin manual
   :config
-  (windmove-default-keybindings 'hyper)
+  (windmove-default-keybindings 'super)
+  ;; Avoid trigerring errors
+  (setq windmove-wrap-around t)
   ;; automatically save buffers associated with files on buffer switch
   ;; and on windows switch
   (defun fp-config-auto-save-command ()
@@ -1797,7 +1895,13 @@ set the hook `comint-input-sender'."
   :config
   (eval-after-load "writegood-mode"
     '(diminish 'writegood-mode)))
+
 ;; (use-package yaml-mode)
+
+(use-package yasnippet
+  :ensure t
+  :config
+  (setq yas-installed-snippets-dir (locate-user-emacs-file "savefile/snippets/")))
 
 ;; ** zenburn-theme
 ;; (use-package zenburn-theme
@@ -1851,51 +1955,53 @@ set the hook `comint-input-sender'."
 
 ;; * Programming
 ;; ** python
-(use-package python
-  :mode ("\\.py\\'" . python-mode)
-  :interpreter ("python" . python-mode)
-  :config
-  (add-hook 'python-mode-hook 'elpy-mode)
-  (add-hook 'python-mode-hook 'smartparens-mode)
-  (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
-  (add-hook 'python-mode-hook 'jedi:setup)
+;; (use-package python
+;;   :mode ("\\.py\\'" . python-mode)
+;;   :interpreter ("python" . python-mode)
+;;   :config
+;;   (add-hook 'python-mode-hook 'elpy-mode)
+;;   (add-hook 'python-mode-hook 'smartparens-mode)
+;;   (add-hook 'python-mode-hook 'rainbow-delimiters-mode)
+;;   ;;  (add-hook 'python-mode-hook 'jedi:setup)
+;;   (defun my/python-mode-hook ()
+;;     (company-mode +1)
+;;     (add-to-list 'company-backends 'company-jedi))
 
-  (defun my/python-mode-hook ()
-    (company-mode +1)
-    (add-to-list 'company-backends 'company-jedi))
+;;   (add-hook 'python-mode-hook 'my/python-mode-hook)
 
-  (add-hook 'python-mode-hook 'my/python-mode-hook)
+;;   ;; Sets the python interpreter to be ipython. To trick emacs into
+;;   ;; thinking we're still running regular python, we run ipython in
+;;   ;; classic mode.
+;;   (setq
+;;    python-shell-interpreter "ipython"
+;;    python-shell-interpreter-args "-i --classic"
+;;    python-environment-directory (locate-user-emacs-file "savefile/python-environments")))
 
-  ;; Sets the python interpreter to be ipython. To trick emacs into
-  ;; thinking we're still running regular python, we run ipython in
-  ;; classic mode.
-  (setq
-   python-shell-interpreter "ipython"
-   python-shell-interpreter-args "-i --classic"))
+;; (use-package elpy
+;;   :ensure t
+;;   :defer t
+;;   :config
+;;   (elpy-enable)
+;;   ;; (elpy-use-ipython)
+;;   ;; (setq elpy-rpc-backend "jedi")
+;;   )
 
-(use-package elpy
-  :ensure t
-  :defer t
-  :config
-  (elpy-enable)
-  (elpy-use-ipython)
-  (setq elpy-rpc-backend "jedi"))
-
-(use-package company-jedi
-  :ensure t
-  :defer t
-  :config
-  (setq jedi:complete-on-dot t)
-  (setq jedi:use-shortcuts t)
-  (add-to-list 'company-backends 'company-jedi))
+;; (use-package company-jedi
+;;   :ensure t
+;;   :defer t
+;;   :config
+;;   (setq jedi:complete-on-dot t)
+;;   (setq jedi:use-shortcuts t)
+;;   (add-to-list 'company-backends 'company-jedi))
 
 ;; ** anaconda-mode
 (use-package anaconda-mode
   :ensure t
   :defer t
   :config
+  (setq anaconda-mode-installation-directory (locate-user-emacs-file "var/anaconda-mode"))
   (add-hook 'python-mode-hook 'anaconda-mode)
-  (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+  ;; (add-hook 'python-mode-hook 'anaconda-eldoc-mode)
   ;; (add-to-list 'python-shell-extra-pythonpaths "/path/to/the/project")
   ;; (add-to-list 'python-shell-extra-pythonpaths "/path/to/the/dependency")
   )
@@ -1928,7 +2034,9 @@ set the hook `comint-input-sender'."
   :ensure nil
   :pin manual)
 ;; ** slime
-(use-package lisp-mode)
+(use-package lisp-mode
+  :ensure nil
+  :pin manual)
 (use-package slime
   :ensure nil
   :pin manual
@@ -1992,6 +2100,17 @@ set the hook `comint-input-sender'."
 (use-package fp-specif
   :ensure nil
   :pin manual)
+
+;; ** magic-latex-buffer
+(use-package magic-latex-buffer
+  :ensure t
+  :config
+  (add-hook 'LaTeX-mode-hook 'magic-latex-buffer)
+  (setq magic-latex-enable-block-highlight nil
+        magic-latex-enable-suscript        t
+        magic-latex-enable-pretty-symbols  t
+        magic-latex-enable-block-align     nil
+        magic-latex-enable-inline-image    nil))
 ;; ** tex
 (use-package tex-site
   :ensure auctex
@@ -2031,7 +2150,7 @@ set the hook `comint-input-sender'."
 
   ;; to use pdfview with auctex
   (add-hook 'LaTeX-mode-hook 'pdf-tools-install)
-  ;; nil beacuse I don't want the pdf to be opened again in the same frame after C-c C-a
+  ;; nil because I don't want the pdf to be opened again in the same frame after C-c C-a
   ;; (setq TeX-view-program-selection nil)
   ;; (setq TeX-view-program-selection '((output-pdf "pdf-tools")))
   ;; (setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
@@ -2147,11 +2266,11 @@ set the hook `comint-input-sender'."
 ;;           :help "Run LaTeX"))
 
 ;; ** company auctex
-(use-package company-auctex
-  :ensure t
-  :defer t
-  :config
-  (company-auctex-init))
+;; (use-package company-auctex
+;;   :ensure t
+;;   :defer t
+;;   :config
+;;   (company-auctex-init))
 
 ;; ** latex preview pane
 
@@ -2159,7 +2278,7 @@ set the hook `comint-input-sender'."
   :disabled t
   :bind ("M-p" . latex-preview-pane-mode)
   :config
-  (setq doc-view-ghostscript-program "gswin64c")
+  (setq doc-view-ghostscript-program "gswin32c")
 
   (custom-set-variables
    '(shell-escape-mode "-shell-escape")
@@ -2172,17 +2291,6 @@ set the hook `comint-input-sender'."
   :defer t
   :config
   (setq reftex-cite-prompt-optional-args t)); Prompt for empty optional arguments in cite
-
-;; ** magic-latex-buffer
-(use-package magic-latex-buffer
-  :ensure t
-  :config
-  (add-hook 'LaTeX-mode-hook 'magic-latex-buffer)
-  (setq magic-latex-enable-block-highlight nil
-        magic-latex-enable-suscript        t
-        magic-latex-enable-pretty-symbols  t
-        magic-latex-enable-block-align     nil
-        magic-latex-enable-inline-image    nil))
 
 ;; ** shell
 
@@ -2255,6 +2363,7 @@ set the hook `comint-input-sender'."
           org-mouse
           org-panel
           org-protocol
+          org-protocol-capture-html
                                         ; org-rmail
           org-screen
                                         ; org-taskjuggler
@@ -2272,6 +2381,7 @@ set the hook `comint-input-sender'."
           ox-html
           ox-koma-letter
           ox-reveal
+          ox-ipynb
           ox-publish
           ))
   :config
@@ -2293,6 +2403,8 @@ set the hook `comint-input-sender'."
 
 ;; Don't enable this because it breaks access to emacs from my Android phone
 (setq org-startup-with-inline-images nil)
+;; Don't use actual width by default
+(setq org-image-actual-width nil)
 
 ;; Costly!
 ;; (setq org-use-property-inheritance t)
@@ -2413,6 +2525,15 @@ set the hook `comint-input-sender'."
 
 (add-to-list 'org-structure-template-alist
              '("n" "#+BEGIN_NOTES\n?\n#+END_NOTES"))
+;;; https://blog.aaronbieber.com/2016/11/23/creating-org-mode-structure-templates.html
+(add-to-list 'org-structure-template-alist
+             (list "p" (concat ":PROPERTIES:\n"
+                               "?\n"
+                               ":END:")))
+(add-to-list 'org-structure-template-alist
+             (list "eh" (concat ":EXPORT_FILE_NAME: ?\n"
+                                ":EXPORT_TITLE:\n"
+                                ":EXPORT_OPTIONS: toc:nil html-postamble:nil num:nil")))
 
 (setq org-speed-commands-user (quote (("0" . ignore)
                                       ("1" . ignore)
@@ -2492,7 +2613,7 @@ set the hook `comint-input-sender'."
 (define-key global-map "\C-cl" 'org-store-link)
 (define-key global-map "\C-cL" 'org-occur-link-in-agenda-files)
 (define-key global-map "\C-ca" 'org-agenda)
-(define-key global-map "\C-cb" 'org-iswitchb)
+(define-key global-map "\C-cb" 'org-switchb)
 (define-key global-map "\C-cc" 'org-capture)
 
 ;; And allow ace-jump-mode within my org files
@@ -2509,8 +2630,12 @@ set the hook `comint-input-sender'."
 ;; line.
 (setq org-return-follows-link t)
 
+;; Jump to target
 ;; Needed by org-goto so that motion keys work.
 (setq org-goto-auto-isearch nil)
+;; Targets complete directly with IDO
+(setq org-goto-interface 'outline-path-completion)
+(setq org-outline-path-complete-in-steps nil)
 
 (setq org-loop-over-headlines-in-active-region t)
 
@@ -2560,9 +2685,11 @@ set the hook `comint-input-sender'."
  '(org-mode-line-clock ((t (:foreground "red" :box (:line-width -1 :style released-button))))))
 
 ;; ** Minimize Emacs frames
-(setq org-link-frame-setup '((vm . vm-visit-folder)
+(setq org-link-frame-setup '((vm . vm-visit-folder-other-window)
+                             (vm-imap . vm-visit-imap-folder-other-window)
                              (gnus . org-gnus-no-new-news)
-                             (file . find-file)))
+                             (file . find-file-other-window)
+                             (wl . wl-other-window)))
 
 (setq org-link-mailto-program '(browse-url-mail "mailto:%a?subject=%s"))
 
@@ -2579,30 +2706,36 @@ set the hook `comint-input-sender'."
 ;; ** TODO Keywords
 
 (setq org-todo-keywords
-      (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-              (sequence "REVIEW(r)" "DELVE(d)" "|" "DONE(d)")
-              (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
+      '( ; for tasks
+        (sequence "TODO(t)" "NEXT(n@/!)" "BLOCKED(b@/!)" "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "DONE(d)")
+        ; for papers or code
+        (sequence "REVIEW(r)" "DELVE(d)" "|" "CANCELLED(c@/!)" "DONE(d)")))
+
 
 (setq org-todo-keyword-faces
-      (quote (("TODO" :foreground "red" :weight bold)
-              ("NEXT" :foreground "blue" :weight bold)
-              ("REVIEW" :foreground "gold" :weight bold)
-              ("DELVE" :foreground "DarkOrchid" :weight bold)
-              ("DONE" :foreground "forest green" :weight bold)
-              ("WAITING" :foreground "orange" :weight bold)
-              ("HOLD" :foreground "magenta" :weight bold)
-              ("CANCELLED" :foreground "forest green" :weight bold)
-              ("MEETING" :foreground "NavajoWhite1" :weight bold)
-              ("PHONE" :foreground "forest green" :weight bold))))
+      '(("TODO" :foreground "red" :weight bold)
+        ("BLOCKED" :foreground "MediumVioletRed" :weight bold)
+        ("NEXT" :foreground "CornFlowerBlue" :weight bold)
+        ("WAITING" :foreground "orange" :weight bold)
+        ("HOLD" :foreground "magenta" :weight bold)
+        ("CANCELLED" :foreground "LightSlateGrey" :weight bold)
+        ("REVIEW" :foreground "gold" :weight bold)
+        ("DELVE" :foreground "DarkOrchid" :weight bold)
+        ("DONE" :foreground "forest green" :weight bold)))
 
 (setq org-todo-state-tags-triggers
-      (quote (("CANCELLED" ("CANCELLED" . t))
-              ("WAITING" ("WAITING" . t))
-              ("HOLD" ("WAITING") ("HOLD" . t))
-              (done ("WAITING") ("HOLD"))
-              ("TODO" ("WAITING") ("CANCELLED") ("HOLD"))
-              ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
-              ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))))
+      '(("CANCELLED" ("CANCELLED" . t))
+        ("WAITING" ("WAITING" . t))
+        ("BLOCKED" ("BLOCKED" . t))
+        ("NEXT" ("NEXT" . t))
+        ("HOLD" ("WAITING") ("HOLD" . t))
+        (done ("WAITING") ("HOLD") ("BLOCKED") ("REVIEW") ("DELVE") ("NEXT"))
+        ("TODO" ("WAITING") ("CANCELLED") ("HOLD") ("BLOCKED") ("NEXT"))
+        ("NEXT" ("WAITING") ("CANCELLED") ("HOLD") ("BLOCKED"))
+        ("DONE" ("WAITING") ("CANCELLED") ("HOLD") ("BLOCKED") ("NEXT") ("DELVE") ("REVIEW"))
+        ("REVIEW" ("DELVE"))
+        ("DELVE" ("DELVE" . t))))
+
 ;; Fast todo selection allows changing from any task todo state to any
 ;; other state directly by selecting the appropriate key from the fast
 ;; todo selection key menu.
@@ -2614,34 +2747,178 @@ set the hook `comint-input-sender'."
 
 (setq org-capture-templates-contexts nil)
 
+(setq org-datetree-add-timestamp 'inactive)
+
+(defvar my/org-basic-task-template "* TODO %^{Task}
+:PROPERTIES:
+:Effort: %^{effort|1:00|0:05|0:15|0:30|2:00|4:00}
+:END:
+Captured %<%Y-%m-%d %H:%M>
+%?
+
+%i
+" "Basic task data")
+
 ;; Capture templates for: TODO tasks, Notes, appointments, phone calls, meetings, and org-protocol
+
 (setq org-capture-templates
-      (quote (("t" "todo" entry (file "~/Org/notes.org")
-               "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
-              ("r" "respond" entry (file "~/Org/notes.org")
-               "* NEXT Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n" :clock-in t :clock-resume t :immediate-finish t)
-              ("n" "note" entry (file "~/Org/notes.org")
-               "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
-              ("j" "Journal" entry (file+datetree "~/Org/Diary.org")
-               "* %?\n%U\n" :clock-in t :clock-resume t)
-              ("w" "org-protocol" entry (file "~/Org/notes.org")
-               "* TODO Review %c\n%U\n" :immediate-finish t)
-              ;; FIXME: shouldn't meeting be appointments? -> Diary.org?
-              ("m" "Meeting" entry (file "~/Org/notes.org")
-               "* MEETING with %? :MEETING:\n%U" :clock-in t :clock-resume t)
-              ("p" "Phone call" entry (file "~/Org/notes.org")
-               "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
-              ("h" "Habit" entry (file "~/Org/notes.org")
-               "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"<%Y-%m-%d %a .+1d/3d>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n")
-              ;; ("J" "Journal Entry" plain
-              ;;  (file+datetree "~/Org/Diary.org")
-              ;;  "%U\n\n%?" :empty-lines-before 1)
-              ("W" "Log Work Task" entry
-               (file+datetree "~/Org/Worklog.org")
-               "* TODO %^{Description}  %^g\n%?\n\nAdded: %U"
-               :clock-in t
-               :clock-keep t)
-              )))
+        `(("t" "Tasks" entry
+           (file+headline "~/Org/notes.org" "Tasks")
+           "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+          ("n" "Notes" entry
+           (file+headline "~/Org/notes.org" "Notes")
+           "* REVIEW %?\n%U\n%a\n" :clock-in t :clock-resume t)
+          ("j" "Journal entry" plain
+           (file+olp+datetree "~/Org/Diary.org")
+           "%i\n%?\n"
+           :unnarrowed t)
+          ("J" "Journal entry with date" plain
+           (file+datetree+prompt "~/Org/Diary.org")
+           "%K - %a\n%i\n%?\n"
+           :unnarrowed t)
+          ("s" "Journal entry with date, scheduled" entry
+           (file+datetree+prompt "~/Org/Diary.org" "Journal")
+           "* \n%K - %a\n%t\t%i\n%?\n"
+           :unnarrowed t)
+          ("c" "Protocol Link" entry (file+headline ,org-default-notes-file "Inbox")
+           "* [[%:link][%:description]] \n\n#+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n%?\n\nCaptured: %U")
+          ("w" "Web site" entry (file+olp "~/Org/notes.org" "Web")
+           "* %c :website:\n%U\n\n %?%:initial")
+          ))
+
+;; (setq org-capture-templates
+;;         `(("t" "Tasks" entry
+;;            (file+headline "~/Org/notes.org" "Inbox")
+;;            ,my/org-basic-task-template)
+;;           ("T" "Quick task" entry
+;;            (file+headline "~/Org/notes.org" "Inbox")
+;;            "* TODO %^{Task}\nSCHEDULED: %t\n"
+;;            :immediate-finish t)
+;;           ("i" "Interrupting task" entry
+;;            (file+headline "~/Org/notes.org" "Inbox")
+;;            "* STARTED %^{Task}"
+;;            :clock-in :clock-resume)
+;;           ("e" "Emacs idea" entry
+;;            (file+headline "~/Org/Software.org" "Emacs")
+;;            "* TODO %^{Task}"
+;;            :immediate-finish t)
+;;           ("E" "Energy" table-line
+;;            (file+headline "~/personal/organizer.org" "Track energy")
+;;            "| %U | %^{Energy 5-awesome 3-fuzzy 1-zzz} | %^{Note} |"
+;;            :immediate-finish t
+;;            )
+;;           ("b" "Business task" entry
+;;            (file+headline "~/personal/business.org" "Tasks")
+;;            ,my/org-basic-task-template)
+;;           ("p" "People task" entry
+;;            (file+headline "~/personal/people.org" "Tasks")
+;;            ,my/org-basic-task-template)
+;;           ("j" "Journal entry" plain
+;;            (file+olp+datetree "~/Org/Diary.org")
+;;            "%i\n%?\n"
+;;            :unnarrowed t)
+;;           ("J" "Journal entry with date" plain
+;;            (file+datetree+prompt "~/Org/Diary.org")
+;;            "%K - %a\n%i\n%?\n"
+;;            :unnarrowed t)
+;;           ("s" "Journal entry with date, scheduled" entry
+;;            (file+datetree+prompt "~/Org/Diary.org" "Journal")
+;;            "* \n%K - %a\n%t\t%i\n%?\n"
+;;            :unnarrowed t)
+;;           ("c" "Protocol Link" entry (file+headline ,org-default-notes-file "Inbox")
+;;            "* [[%:link][%:description]] \n\n#+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n%?\n\nCaptured: %U")
+;;           ("w" "Web site" entry (file+olp "~/Org/notes.org" "Web")
+;;            "* %c :website:\n%U\n\n %?%:initial")
+;;           ("db" "Done - Business" entry
+;;            (file+headline "~/Org/notes.org" "Tasks")
+;;            "* DONE %^{Task}\nSCHEDULED: %^t\n%?")
+;;           ("dp" "Done - People" entry
+;;            (file+headline "~/Org/notes.org" "Tasks People")
+;;            "* DONE %^{Task}\nSCHEDULED: %^t\n%?")
+;;           ("dt" "Done - Task" entry
+;;            (file+headline "~/Org/notes.org" "Inbox")
+;;            "* DONE %^{Task}\nSCHEDULED: %^t\n%?")
+;;           ("q" "Quick note" item
+;;            (file+headline "~/Org/notes.org" "Quick notes"))
+;;   ;;         ("l" "Ledger entries")
+;;   ;;         ("lm" "MBNA" plain
+;;   ;;          (file "~/personal/ledger")
+;;   ;;          "%(org-read-date) %^{Payee}
+;;   ;;   Liabilities:MBNA
+;;   ;;   Expenses:%^{Account}  $%^{Amount}
+;;   ;; " :immediate-finish t)
+;;   ;;         ("ln" "No Frills" plain
+;;   ;;          (file "~/personal/ledger")
+;;   ;;          "%(let ((org-read-date-prefer-future nil)) (org-read-date)) * No Frills
+;;   ;;   Liabilities:MBNA
+;;   ;;   Assets:Wayne:Groceries  $%^{Amount}
+;;   ;; " :immediate-finish t)
+;;   ;;         ("lc" "Cash" plain
+;;   ;;          (file "~/personal/ledger")
+;;   ;;          "%(org-read-date) * %^{Payee}
+;;   ;;   Expenses:Cash
+;;   ;;   Expenses:%^{Account}  %^{Amount}
+;;   ;; ")
+;;           ("B" "Book" entry
+;;            (file+datetree "~/Org/notes.org" "Books")
+;;            "* %^{Title}  %^g
+;;   %i
+;;   *Author(s):* %^{Author} \\\\
+;;   *ISBN:* %^{ISBN}
+
+;;   %?
+
+;;   *Review on:* %^t \\
+;;   %a
+;;   %U"
+;;            :clock-in :clock-resume)
+;;            ("C" "Contact" entry (file "~/Org/notes.org" "Contacts")
+;;             "* %(org-contacts-template-name)
+;;   :PROPERTIES:
+;;   :EMAIL: %(my/org-contacts-template-email)
+;;   :END:")
+;;            ("n" "Daily note" table-line (file+olp "~/Org/notes.org" "Inbox")
+;;             "| %u | %^{Note} |"
+;;             :immediate-finish t)
+;;            ("r" "Notes" entry
+;;             (file+datetree "~/Org/notes.org")
+;;             "* %?\n\n%i\n%U\n"
+;;             )))
+
+;; (setq org-capture-templates
+;;       `(("t" "todo" entry (file "~/Org/notes.org")
+;;          "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
+;;         ("r" "respond" entry (file "~/Org/notes.org")
+;;          "* NEXT Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n" :clock-in t :clock-resume t :immediate-finish t)
+;;         ("n" "note" entry (file "~/Org/notes.org")
+;;          "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
+;;         ("j" "Journal" entry (file+datetree "~/Org/Diary.org")
+;;          "* %?\n%U\n" :clock-in t :clock-resume t)
+;;         ;; ("w" "org-protocol" entry (file "~/Org/notes.org")
+;;         ;;  "* TODO Review %c\n%U\n" :immediate-finish t)
+;;         ("w" "Web site"
+;;          entry (file+olp "~/org/notes.org" "Web")
+;;          "* %c :website:\n%U %?%:initial")
+;;         ;; FIXME: shouldn't meeting be appointments? -> Diary.org?
+;;         ("m" "Meeting" entry (file "~/Org/notes.org")
+;;          "* MEETING with %? :MEETING:\n%U" :clock-in t :clock-resume t)
+;;         ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+;;          "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+;;         ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+;;          "* %? [[%:link][%:description]] \nCaptured On: %U")
+;;         ;; ("p" "Phone call" entry (file "~/Org/notes.org")
+;;         ;;  "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
+;;         ("h" "Habit" entry (file "~/Org/notes.org")
+;;          "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"<%Y-%m-%d %a .+1d/3d>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n")
+;;         ;; ("J" "Journal Entry" plain
+;;         ;;  (file+datetree "~/Org/Diary.org")
+;;         ;;  "%U\n\n%?" :empty-lines-before 1)
+;;         ("W" "Log Work Task" entry
+;;          (file+datetree "~/Org/Worklog.org")
+;;          "* TODO %^{Description}  %^g\n%?\n\nAdded: %U"
+;;          :clock-in t
+;;          :clock-keep t)
+;;         ))
 
 ;; Remove empty LOGBOOK drawers on clock out
 (defun bh/remove-empty-drawer-on-clock-out ()
@@ -2654,6 +2931,12 @@ set the hook `comint-input-sender'."
 
 
 ;; ** Agenda
+
+;; TODO: http://cachestocaches.com/2016/9/my-workflow-org-agenda/
+;; Synchronization
+;; TODO: http://cestlaz.github.io/posts/using-emacs-26-gcal/#.WG52MOtj0wE.reddit
+;; TODO: https://www.youtube.com/watch?v=cIzzjSaq2N8&list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE&index=33
+;; TODO: https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE
 
 (setq org-agenda-include-diary nil)
 ;; (setq org-agenda-insert-diary-extract-time t)
@@ -2699,10 +2982,10 @@ set the hook `comint-input-sender'."
 ;;               (search category-up))))
 
 (setq org-agenda-sorting-strategy
-      '((agenda habit-down time-up category-keep)
+      '((agenda habit-down time-up priority-down category-keep)
         (todo category-up time-up)
-        (tags category-up time-up)
-        (search time-up)))
+        (tags tsia-down ts-down category-up time-up)
+        (search time-down timestamp-down ts-down tsia-down)))
 
 ;; Always hilight the current agenda line
 (add-hook 'org-agenda-mode-hook
@@ -2761,81 +3044,92 @@ set the hook `comint-input-sender'."
 (setq org-agenda-persistent-filter t)
 
 ;; Custom agenda command definitions
+
 (setq org-agenda-custom-commands
-      (quote (("N" "Notes" tags "NOTE"
-               ((org-agenda-overriding-header "Notes")
-                (org-tags-match-list-sublevels t)))
-              ("h" "Habits" tags-todo "STYLE=\"habit\""
-               ((org-agenda-overriding-header "Habits")
-                (org-agenda-sorting-strategy
-                 '(todo-state-down effort-up category-keep))))
-              (" " "Agenda"
-               ((agenda "" nil)
-                (tags "REFILE"
-                      ((org-agenda-overriding-header "Tasks to Refile")
-                       (org-tags-match-list-sublevels nil)))
-                (tags-todo "-CANCELLED/!"
-                           ((org-agenda-overriding-header "Stuck Projects")
-                            (org-agenda-skip-function 'bh/skip-non-stuck-projects)
-                            (org-agenda-sorting-strategy
-                             '(category-keep))))
-                (tags-todo "-HOLD-CANCELLED/!"
-                           ((org-agenda-overriding-header "Projects")
-                            (org-agenda-skip-function 'bh/skip-non-projects)
-                            (org-tags-match-list-sublevels 'indented)
-                            (org-agenda-sorting-strategy
-                             '(category-keep))))
-                (tags-todo "-CANCELLED/!NEXT"
-                           ((org-agenda-overriding-header (concat "Project Next Tasks"
-                                                                  (if bh/hide-scheduled-and-waiting-next-tasks
-                                                                      ""
-                                                                    " (including WAITING and SCHEDULED tasks)")))
-                            (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
-                            (org-tags-match-list-sublevels t)
-                            (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-sorting-strategy
-                             '(todo-state-down effort-up category-keep))))
-                (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
-                           ((org-agenda-overriding-header (concat "Project Subtasks"
-                                                                  (if bh/hide-scheduled-and-waiting-next-tasks
-                                                                      ""
-                                                                    " (including WAITING and SCHEDULED tasks)")))
-                            (org-agenda-skip-function 'bh/skip-non-project-tasks)
-                            (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-sorting-strategy
-                             '(category-keep))))
-                (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
-                           ((org-agenda-overriding-header (concat "Standalone Tasks"
-                                                                  (if bh/hide-scheduled-and-waiting-next-tasks
-                                                                      ""
-                                                                    " (including WAITING and SCHEDULED tasks)")))
-                            (org-agenda-skip-function 'bh/skip-project-tasks)
-                            (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-sorting-strategy
-                             '(category-keep))))
-                (tags-todo "-CANCELLED+WAITING|HOLD/!"
-                           ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
-                                                                  (if bh/hide-scheduled-and-waiting-next-tasks
-                                                                      ""
-                                                                    " (including WAITING and SCHEDULED tasks)")))
-                            (org-agenda-skip-function 'bh/skip-non-tasks)
-                            (org-tags-match-list-sublevels nil)
-                            (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
-                            (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)))
-                (tags "-REFILE/"
-                      ((org-agenda-overriding-header "Tasks to Archive")
-                       (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
-                       (org-tags-match-list-sublevels nil))))
-               nil))))
+      '(("n" "Agenda and all TODOs"
+         ((agenda "")
+          (alltodo "")))
+        ("p" . "Papers + Name tag searches")
+        ("pa" tags-tree "ai")
+        ("pe" tags-tree "eiah")))
+      
+;; (setq org-agenda-custom-commands
+;;       (quote (("N" "Notes" tags "NOTE"
+;;                ((org-agenda-overriding-header "Notes")
+;;                 (org-tags-match-list-sublevels t)))
+;;               ("h" "Habits" tags-todo "STYLE=\"habit\""
+;;                ((org-agenda-overriding-header "Habits")
+;;                 (org-agenda-sorting-strategy
+;;                  '(todo-state-down effort-up category-keep))))
+;;               (" " "Agenda"
+;;                ((agenda "" nil)
+;;                 (tags "REFILE"
+;;                       ((org-agenda-overriding-header "Tasks to Refile")
+;;                        (org-tags-match-list-sublevels nil)))
+;;                 (tags-todo "-CANCELLED/!"
+;;                            ((org-agenda-overriding-header "Stuck Projects")
+;;                             (org-agenda-skip-function 'bh/skip-non-stuck-projects)
+;;                             (org-agenda-sorting-strategy
+;;                              '(category-keep))))
+;;                 (tags-todo "-HOLD-CANCELLED/!"
+;;                            ((org-agenda-overriding-header "Projects")
+;;                             (org-agenda-skip-function 'bh/skip-non-projects)
+;;                             (org-tags-match-list-sublevels 'indented)
+;;                             (org-agenda-sorting-strategy
+;;                              '(category-keep))))
+;;                 (tags-todo "-CANCELLED/!NEXT"
+;;                            ((org-agenda-overriding-header (concat "Project Next Tasks"
+;;                                                                   (if bh/hide-scheduled-and-waiting-next-tasks
+;;                                                                       ""
+;;                                                                     " (including WAITING and SCHEDULED tasks)")))
+;;                             (org-agenda-skip-function 'bh/skip-projects-and-habits-and-single-tasks)
+;;                             (org-tags-match-list-sublevels t)
+;;                             (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-sorting-strategy
+;;                              '(todo-state-down effort-up category-keep))))
+;;                 (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+;;                            ((org-agenda-overriding-header (concat "Project Subtasks"
+;;                                                                   (if bh/hide-scheduled-and-waiting-next-tasks
+;;                                                                       ""
+;;                                                                     " (including WAITING and SCHEDULED tasks)")))
+;;                             (org-agenda-skip-function 'bh/skip-non-project-tasks)
+;;                             (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-sorting-strategy
+;;                              '(category-keep))))
+;;                 (tags-todo "-REFILE-CANCELLED-WAITING-HOLD/!"
+;;                            ((org-agenda-overriding-header (concat "Standalone Tasks"
+;;                                                                   (if bh/hide-scheduled-and-waiting-next-tasks
+;;                                                                       ""
+;;                                                                     " (including WAITING and SCHEDULED tasks)")))
+;;                             (org-agenda-skip-function 'bh/skip-project-tasks)
+;;                             (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-with-date bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-sorting-strategy
+;;                              '(category-keep))))
+;;                 (tags-todo "-CANCELLED+WAITING|HOLD/!"
+;;                            ((org-agenda-overriding-header (concat "Waiting and Postponed Tasks"
+;;                                                                   (if bh/hide-scheduled-and-waiting-next-tasks
+;;                                                                       ""
+;;                                                                     " (including WAITING and SCHEDULED tasks)")))
+;;                             (org-agenda-skip-function 'bh/skip-non-tasks)
+;;                             (org-tags-match-list-sublevels nil)
+;;                             (org-agenda-todo-ignore-scheduled bh/hide-scheduled-and-waiting-next-tasks)
+;;                             (org-agenda-todo-ignore-deadlines bh/hide-scheduled-and-waiting-next-tasks)))
+;;                 (tags "-REFILE/"
+;;                       ((org-agenda-overriding-header "Tasks to Archive")
+;;                        (org-agenda-skip-function 'bh/skip-non-archivable-tasks)
+;;                        (org-tags-match-list-sublevels nil))))
+;;                nil))))
 
 
 ;; ** Clocking
+
+;; https://github.com/schmendrik/OrgClockTray
 
 ;; Save the running clock and all clock history when exiting Emacs, load it on startup
 (setq org-clock-persist t)
@@ -2930,61 +3224,25 @@ set the hook `comint-input-sender'."
   :pin manual
   :defer t
   )
+
 
 ;; ** Tags
 
 ;; Tags with fast selection keys
-(setq org-tag-alist
-      '((:startgroup)
-        ("@errand" . ?e) ("@office" . ?o) ("@home" . ?H)
-        ("@farm" . ?f)
-        (:endgroup)
-        ("WAITING" . ?w)
-        ("HOLD" . ?h)
-        ("PERSONAL" . ?P)
-        ("WORK" . ?W)
-        ("FARM" . ?F)
-        ("ORG" . ?O)
-        ("NORANG" . ?N)
-        ("crypt" . ?E)
-        ("NOTE" . ?n)
-        ("CANCELLED" . ?c)
-        ("FLAGGED" . ??)))
+;; (setq org-tag-alist '(("@work" . ?w) ("@home" . ?h) ("laptop" . ?l)))
 
 ;; Tags with fast selection keys
-(setq org-tag-persistent-alist (quote ((:startgroup)
-                                       ("@georges"   . ?g)
-                                       ("@youssef"   . ?y)
-                                       ("@jps"       . ?j)
-                                       ("@lisp"      . ?l)
-                                       ("@emacs"     . ?e)
-                                       ("@fisda"     . ?f)
-                                       ("@infoth"    . ?i)
-                                       ("@minia"     . ?a)
-                                       ("@cqp"       . ?c)
-                                       ("@deptinfo"  . ?d)
-                                       ("@supelec"   . ?s)
-                                       ("@home"      . ?h)
-                                       (:endgroup)
-                                       (:newline)
-                                       (:startgroup)
-                                       ("slide"      . ?s)
-                                       ("poly"       . ?p)
-                                       ("exercise"   . ?e)
-                                       ("example"    . ?x)
-                                       (:endgroup)
-                                       (:newline)
-                                       ("phone"      . ?p)
-                                       ("waiting"    . ?w)
-                                       ("hold"       . ?h)
-                                       ("personal"   . ?P)
-                                       ("work"       . ?W)
-                                       ("org"        . ?O)
-                                       ("mark"       . ?M)
-                                       ("note"       . ?n)
-                                       ("obsolete"   . ?o)
-                                       ("deprecated" . ?c)
-                                       ("flagged"    . ??))))
+(setq org-tag-persistent-alist '((:startgrouptag)
+                                 ("publish")
+                                 (:grouptags)
+                                 ("noexport" . ?E)
+                                 ("nopublic" . ?P)
+                                 ("webmenu"  . ?m)
+                                 ("web"      . ?w)
+                                 ("slides"   . ?s)
+                                 ("pdf"      . ?p)
+                                 (:endgrouptag)
+                                 ))
 
 ;; Allow setting single tags without the menu
 (setq org-fast-tag-selection-single-key 'expert)
@@ -2999,12 +3257,12 @@ set the hook `comint-input-sender'."
 
 ;; ** Refile
 
+;;; https://blog.aaronbieber.com/2017/03/19/organizing-notes-with-refile.html
+
 (setq org-refile-targets '((nil :maxlevel . 9)
                            ("notes.org" :regexp . "Viewed")
                            (org-agenda-files :maxlevel . 3)))
 (setq org-refile-use-outline-path 'file)
-;; Targets complete directly with IDO
-(setq org-outline-path-complete-in-steps nil)
 (setq org-refile-allow-creating-parent-nodes 'confirm)
 ;; Annoying because requires to C-0 C-C C-w often
                                         ; (setq org-refile-use-cache t)
@@ -3015,6 +3273,24 @@ set the hook `comint-input-sender'."
   (not (member (nth 2 (org-heading-components)) org-done-keywords)))
 
 (setq org-refile-target-verify-function 'bh/verify-refile-target)
+
+(defun my/org-read-datetree-date (d)
+  "Parse a time string D and return a date to pass to the datetree functions."
+  (let ((dtmp (nthcdr 3 (parse-time-string d))))
+    (list (cadr dtmp) (car dtmp) (caddr dtmp))))
+
+(defun my/org-refile-to-archive-datetree (&optional bfn)
+  "Refile an entry to a datetree under an archive."
+  (interactive)
+  (require 'org-datetree)
+  (let* ((bfn (or bfn (find-file-noselect (expand-file-name "~/Org/Diary.org"))))
+         (datetree-date (my/org-read-datetree-date (org-read-date t nil))))
+    (org-refile nil nil (list nil (buffer-file-name bfn) nil
+                              (with-current-buffer bfn
+                                (save-excursion
+                                  (org-datetree-find-date-create datetree-date)
+                                  (point))))))
+  (setq this-command 'my/org-refile-to-journal))
 
 ;; ** Archive
 
@@ -3028,7 +3304,7 @@ set the hook `comint-input-sender'."
 (setq org-log-done 'time)
 (setq org-log-into-drawer t)
 (setq org-log-state-notes-insert-after-drawers nil)
-
+
 ;; ** Babel
 
 ;; (setq org-ditaa-jar-path "~/java/ditaa.jar")
@@ -3061,6 +3337,9 @@ set the hook `comint-input-sender'."
    ;; (ledger . t)
    ;; (plantuml . t)
    ))
+
+;; (setq org-babel-latex-htlatex-packages
+;;      '("[usenames]{color}" "{tikz}" "{color}" "{listings}" "{amsmath}"))
 
 ;; Do not prompt to confirm evaluation
 ;; This may be dangerous - make sure you understand the consequences
@@ -3172,7 +3451,11 @@ and append it."
 
 ;; (provide 'org-pdfview)
 ;;; org-pdfview.el ends here
+
+;; ** org-noter
 
+(use-package org-noter
+  :ensure t)
 
 ;; ** Org Ref
 
@@ -3189,7 +3472,9 @@ and append it."
 
 ;;
 ;; Bibliography and bibliography notes handling.
+;; https://tincman.wordpress.com/2011/01/04/research-paper-management-with-emacs-org-mode-and-reftex/
 ;; http://www-public.telecom-sudparis.eu/~berger_o/weblog/2012/03/23/how-to-manage-and-export-bibliographic-notesrefs-in-org-mode/
+;; https://emacs.stackexchange.com/questions/3375/loading-bibtex-file-in-org-mode-file
 ;; http://blog.modelworks.ch/?p=379
 ;; https://github.com/vikasrawal/orgpaper/
 ;;
@@ -3206,6 +3491,12 @@ and append it."
 (require 'ox-bibtex)
 
 (setq org-bibtex-autogen-keys t)
+
+(setq org-bibtex-headline-format-function
+  '(lambda (entry) 
+     (if (cdr (assq :url entry))
+         (format "[[%s][%s]]" (cdr (assq :url entry)) (cdr (assq :title entry)))
+       (cdr (assq :title entry)))))
 
 ;; Export bibliography keyword
 
@@ -3228,6 +3519,8 @@ and append it."
 (ad-activate 'org-latex-keyword)
 
 ;; Re-define bibtex link type
+
+;; http://www-public.tem-tsp.eu/~berger_o/weblog/2012/03/23/how-to-manage-and-export-bibliographic-notesrefs-in-org-mode/
 
 (defun fp-bibtex-cite-export-handler (path desc format)
   ;; (message "my-rtcite-export-handler is called : path = %s, desc = %s, format ;;= %s" path desc format)
@@ -3277,13 +3570,14 @@ keyword we clicked on. We then open link from bibtex file."
         (setq key-end link-string-end))) ; no comma found so take the end
     ;; and backward to previous comma from point which defines the start character
     (save-excursion
-      (if (search-backward "," link-string-beginning 1 1)
+      (if (and (> (point) link-string-beginning)
+               (search-backward "," link-string-beginning 1 1))
           (setq key-beginning (+ (match-beginning 0) 1)) ; we found a match
         (setq key-beginning link-string-beginning))) ; no match found
     ;; save the key we clicked on.
     (setq bibtex-key (fp-strip-string (buffer-substring key-beginning key-end)))
     (set-text-properties 0 (length bibtex-key) nil bibtex-key)
-    (org-open-link-from-string (format "[[file:%s::#%s]]" org-bibtex-file bibtex-key))
+    (org-open-link-from-string (format "[[file:%s::#%s]]" (fp-find-org-bibtex-file) bibtex-key))
     ))
 
 ;; add functions to complete papers and bibtex entries
@@ -3322,8 +3616,17 @@ keyword we clicked on. We then open link from bibtex file."
 
 ;; Setup org-reftex when entering a new org document
 
+;; Add a few keywords to org-bibtex-types
+(defun add-keyword-to-entry (entry)
+  (if (eq :optional (car entry))
+      (append entry '(:keywords :url :biburl :bibsource :hal_id :hal_version :abstract :issn :isbn :pagetotal))
+    entry))
+
+(setq org-bibtex-types
+      (mapcar #'(lambda (entry) `(,(car entry) ,@(mapcar #'add-keyword-to-entry (cdr entry)))) org-bibtex-types))
+
 (defvar *fp-default-org-bibtex-file*
-  (expand-file-name "~/Papers/Qiqqa.org"))
+  (expand-file-name "~/Papers/Bibliography.org"))
 
 (defun fp-find-org-bibtex-file ()
   (save-excursion
@@ -3334,7 +3637,7 @@ keyword we clicked on. We then open link from bibtex file."
         (if (save-excursion
               (or (re-search-forward re nil t)
                   (re-search-backward re nil t)))
-            (concat (match-string 1) ".org"))))))
+            (concat (match-string-no-properties 1) ".org"))))))
 
 ;; TODO: something wrong here. How to decide that we are writing a paper?
 ;; Either insert a template of headers or define a minor mode.
@@ -3389,13 +3692,15 @@ keyword we clicked on. We then open link from bibtex file."
 (setq org-export-with-toc nil)
 (setq org-export-with-priority t)
 (setq org-export-dispatch-use-expert-ui nil)
-(setq org-export-babel-evaluate t)
+(setq org-export-use-babel nil)
 (setq org-export-allow-bind-keywords t)
 
 
 ;; ** LaTeX
 
-(setq org-latex-listings 'minted)
+;; (setq org-latex-hyperref-template "\\hypersetup{\n pdfauthor={Fabrice Popineau},\n pdftitle={%t},\n pdfkeywords={%k},\n pdfsubject={%d},\n pdfcreator={%c}, \n pdflang={english}}\n")
+
+;; (setq org-latex-listings 'minted)
 (setq org-latex-listings 't)
 
 (setq org-latex-create-formula-image-program 'imagemagick) ;; imagemagick
@@ -3404,14 +3709,14 @@ keyword we clicked on. We then open link from bibtex file."
 (setq org-create-formula-image-convert-command "convert.exe")
 
 (setq org-preview-latex-process-alist
-      '((dvipng :programs
+      `((dvipng :programs
           ("latex" "dvipng" "gs")
           :description "dvi > png" :message "you need to install the programs: latex, dvipng and ghostscript." :image-input-type "dvi" :image-output-type "png" :image-size-adjust
           (1.0 . 1.0)
           :latex-compiler
           ("latex -interaction nonstopmode -output-directory %o %f")
           :image-converter
-          ("dvipng -fg %F -bg %B -D %D -T tight -o %b.png %f"))
+          ("dvipng -fg %F -bg %B -D %D -T tight -o %O %f"))
         (dvisvgm :programs
           ("latex" "dvisvgm" "gs")
           :description "dvi > svg" :message "you need to install the programs: latex, dvisvgm and ghostscript." :use-xcolor t :image-input-type "dvi" :image-output-type "svg" :image-size-adjust
@@ -3419,7 +3724,7 @@ keyword we clicked on. We then open link from bibtex file."
           :latex-compiler
           ("latex -interaction nonstopmode -output-directory %o %f")
           :image-converter
-          ("dvisvgm %f -n -b min -c %S -o %b.svg"))
+          ("dvisvgm %f -n -b min -c %S -o %O"))
         (imagemagick :programs
           ("latex" "convert" "gs")
           :description "pdf > png" :message "you need to install the programs: latex, imagemagick and ghostscript." :use-xcolor t :image-input-type "pdf" :image-output-type "png" :image-size-adjust
@@ -3427,7 +3732,7 @@ keyword we clicked on. We then open link from bibtex file."
           :latex-compiler
           ("pdflatex -interaction nonstopmode -output-directory %o %f")
           :image-converter
-          ("convert.exe -density %D -trim -antialias %f -quality 100 %b.png"))))
+          (,(concat org-create-formula-image-convert-command " -density %D -trim -antialias %f -quality 100 %O")))))
 
 ;; (setq org-format-latex-options
 ;;       '(:foreground default :background default :scale 1.414 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
@@ -3435,7 +3740,7 @@ keyword we clicked on. We then open link from bibtex file."
 ;;       )
 
 (setq org-latex-pdf-process
-      '("c:/Msys64/usr/bin/perl.exe c:/Local/TeXLive/texmf-dist/scripts/latexmk/latexmk.pl -cd -pdf -bibtex -pv- %f"))
+      '("c:/Local/Msys64/usr/bin/perl.exe c:/Local/TeXLive/texmf-dist/scripts/latexmk/latexmk.pl -cd -pdf -bibtex -pv- %f"))
 
 
 (add-to-list
@@ -3536,6 +3841,10 @@ keyword we clicked on. We then open link from bibtex file."
          ("\\section{%s}" . "\\section*{%s}")
          ("\\subsection{%s}" . "\\subsection*{%s}")
          ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+        ("cv" "\\documentclass{europasscv}\n     [NO-DEFAULT-PACKAGES]\n     [NO-PACKAGES]\n     [EXTRA]"
+         ("\\section{%s}" . "\\section*{%s}")
+         ("\\subsection{%s}" . "\\subsection*{%s}")
+         ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
         ("poly" "\\documentclass[poly,french]{fpsupelec}\n     [NO-DEFAULT-PACKAGES]\n     [NO-PACKAGES]\n     [EXTRA]"
          ("\\part{%s}" . "\\part*{%s}")
          ("\\chapter{%s}" . "\\chapter*{%s}")
@@ -3545,8 +3854,8 @@ keyword we clicked on. We then open link from bibtex file."
          ("\\Exercise{%s}" . "\\Exercise{%s}"))
         ;; This is a multiple TD class
         ("td" "\\documentclass{fpsupelec}\n[NO-DEFAULT-PACKAGES]\n[NO-PACKAGES]\n[EXTRA]"
-         ;;         ("\\fpremark{%s}\\fpnewtd" . "\\fpremark{%s}\\fpnewtd")
-         ("\\fpremark{%s}" . "\\fpremark{%s}")
+         ("\\fpremark{%s}\\fpnewtd" . "\\fpremark{%s}\\fpnewtd")
+         ;; ("\\fpremark{%s}" . "\\fpremark{%s}")
          ("\\Exercise{%s}" . "\\Exercise{%s}")
          ("\\begin{questiion} %% %s" "\\end{questiion}")
          ("\\begin{soluce} %% %s" "\\end{soluce}"))
@@ -3616,6 +3925,10 @@ keyword we clicked on. We then open link from bibtex file."
          ("\\section{%s}" . "\\section*{%s}")
          ("\\subsection{%s}" . "\\subsection*{%s}")
          ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
+        ("offrestage" "\\documentclass{memoir}\n     [NO-DEFAULT-PACKAGES]\n     [NO-PACKAGES]\n     [EXTRA]"
+         ("\\section{%s}" . "\\section*{%s}")
+         ("\\subsection{%s}" . "\\subsection*{%s}")
+         ("\\subsubsection{%s}" . "\\subsubsection*{%s}"))
         ("book" "\\documentclass[11pt]{memoir}"
          ("\\part{%s}" . "\\part*{%s}")
          ("\\chapter{%s}" . "\\chapter*{%s}")
@@ -3625,6 +3938,9 @@ keyword we clicked on. We then open link from bibtex file."
 
 
 ;; ** Beamer
+
+;; FIXME: why isn't this file loaded earlier?
+(require 'ox-beamer)
 
 ;; Beamer
 ;; (setq org-beamer-outline-frame-title "Survol")
@@ -3662,6 +3978,7 @@ keyword we clicked on. We then open link from bibtex file."
 (setq org-html-head-include-scripts nil)
 (setq org-html-head-include-default-style nil)
 
+(setq org-html-html5-fancy t)
 (setq org-html-htmlize-output-type 'css)
 
 (setq org-html-table-row-open-tag
@@ -3694,6 +4011,9 @@ keyword we clicked on. We then open link from bibtex file."
 
 
 ;; ** Publish
+
+;; http://emacs.stackexchange.com/questions/2259/how-to-export-top-level-headings-of-org-mode-buffer-to-separate-files
+
 (setq org-publish-timestamp-directory
       (expand-file-name  "org-timestamps/" fp-config-savefile-dir))
 
@@ -3724,11 +4044,30 @@ keyword we clicked on. We then open link from bibtex file."
     ))
 
 
+(defun fp-org-notebook-export-function()
+  (interactive)
+  (let* ((export-file-name (org-export-output-file-name ".ipynb" t))
+         )
+    (message "Generating %s" export-file-name)
+    ;; (org-export-to-file 'jupyter-notebook file nil t nil nil nil nil)
+    (ox-ipynb-export-to-ipynb-file nil t nil nil nil)
+    ))
+
+
+(defun fp-export-all-notebook ()
+  (interactive)
+  (let ((org-use-tag-inheritance nil))
+    (save-mark-and-excursion
+     (goto-char (point-min))
+     (org-map-entries #'fp-org-notebook-export-function "notebook" 'file))))
+
+
 (defun fp-org-pdf-export-function()
   (interactive)
   (let* ((file (org-export-output-file-name ".tex" t))
          (dir (file-name-directory file))
-         (outdir (if (string= "pdf/" (substring dir -4 (length dir)))
+         (outdir (if (and (> (length dir) 4)
+                          (string= "pdf/" (substring dir -4 (length dir))))
                      dir
                    (expand-file-name "pdf/" dir)))
          (outfile (org-export-output-file-name ".tex" t outdir))
@@ -3788,6 +4127,8 @@ keyword we clicked on. We then open link from bibtex file."
              (org-export-output-file-name ".html" t) nil t)) "slides" 'file)))
 
 ;; *** to HTML
+
+;; TODO: http://emacs.stackexchange.com/questions/2259/how-to-export-top-level-headings-of-org-mode-buffer-to-separate-files
 
 ;;; I use a template scheme. My main template file is
 ;;; ~/Org/templates/template-page-normale.html
@@ -3854,18 +4195,69 @@ keyword we clicked on. We then open link from bibtex file."
   "Export a subtree to HTML using `fp-html' exporter, body only."
   (with-current-buffer org-buffer
     ;; (message "org-buffer = %s\n" (buffer-name org-buffer))
-    (org-export-as 'fp-html t nil t)))
+    (let* ((element (org-element-at-point))
+           (tags (org-export-get-tags element nil))
+           (text (org-element-property :title element))
+           (level (1- (org-element-property :level element)))
+           (body (org-export-as 'fp-html t nil t))
+           (html 
+            (if (or (= 0 level) (cl-intersection '("webjumbo" "webpage") tags :test #'equal))
+                (format "<div class=\"jumbotron webjumbo\"><h1 class=\"thumbnail\">%s</h1>%s<br/></div>"
+                 text body)
+              (concatenate 'string
+                           (format "<h%d>%s</h%d>" level text level)
+                           "<br/>"
+                           body))))
+      (replace-regexp-in-string "<p>[[:space:]]*<br>[[:space:]]*</p>" "<br>" html))))
+
+(defun fp-export-origo-body ()
+  "Export a subtree to HTML using `fp-html' exporter, body only."
+  (with-current-buffer org-buffer
+    ;; (message "org-buffer = %s\n" (buffer-name org-buffer))
+    (concatenate 'string
+                 "<div class=\"col "
+                 (if (fp-get-news)
+                     "c8"
+                   "c10")
+                 "\">"
+                 (org-export-as 'fp-html t nil t)
+                 "</div>")))
+
+(defun fp-get-news ())
+
+(defun fp-export-origo-format-news (news)
+  "")
+
+(defun fp-export-origo-news ()
+  (when (fp-get-news)
+    (concatenate 'string
+                 "<div class=\"col c2\""
+                 (fp-export-origo-format-news (fp-get-news))
+                 "</div>")))
+
+
+(defvar fp-export-current-heading "")
+
+(defun fp-export-origo-get-title ()
+  (upcase fp-export-current-heading)
+  )
 
 (defun fp-org-html-export-function()
   "Main HTML export function for a subtree."
   (let ((org-buffer (current-buffer))
+        (fp-export-current-heading (nth 4 (org-heading-components)))
+        (template-buffer
+         (find-file-noselect (or (and (fp-get-variable "HTML_TEMPLATE")
+                                      (expand-file-name (fp-get-variable "HTML_TEMPLATE") "~/Org/"))
+                                 "~/Org/templates/template-page-normale.html") t))
         (file (org-export-output-file-name ".html" t)))
     (incf fp-export-position)
+    (message "org-heading-components: %S\n" (org-heading-components))
     (when file
       ;; (message "fp-org-html-export-function\n\tfile=%s\n\tfp-export-scope=%s" file fp-export-scope)
       (with-current-buffer (find-file-noselect file t)
         (erase-buffer)
-        (insert-buffer-substring (find-file-noselect "~/Org/templates/template-page-normale.html" t))
+        (insert-buffer-substring template-buffer)
         (ob:eval-lisp)
         (save-buffer)
         )
@@ -3874,6 +4266,7 @@ keyword we clicked on. We then open link from bibtex file."
 (defun fp-test ()
   (org-map-entries #'(lambda ()
                        (message (format "%s" (org-get-tags-at (point) t)))) "web" 'file))
+
 (defun fp-export-current-document()
   (interactive)
   (let ((org-use-tag-inheritance nil)
@@ -3884,7 +4277,7 @@ keyword we clicked on. We then open link from bibtex file."
         )
                                         ;, (fp-gather-links-dest)
     (let* ((fp-export-scope 'file)
-           (org-use-tag-inheritance '("webpage"))
+           (org-use-tag-inheritance '("webpage" "ARCHIVE"))
            (previous-level 0)
            fp-export-menu
            )
@@ -3892,12 +4285,12 @@ keyword we clicked on. We then open link from bibtex file."
                            (when (cl-intersection '("web" "webmenu" "webpage") (org-get-tags-at (point) t) :test #'string-equal)
                              ;; (message "tags = %s" (org-get-tags-at (point) t))
                              (fp-build-menu)))
-                       "webmenu-webpage-nopublic|web-webpage-nopublic|webtarget"
+                       "webmenu-webpage-nopublic-ARCHIVE|web-webpage-nopublic-ARCHIVE|webtarget-ARCHIVE"
                        'file)
       ;; (message "menu=%s" fp-export-menu)
       (org-map-entries #'fp-org-html-export-function
                        ;; "web-webpage-nopublic|webmenu-webpage-nopublic"
-                       "web-webpage"
+                       "web-webpage-ARCHIVE"
                        'file))
 
     (org-map-entries #'(lambda ()
@@ -3908,18 +4301,37 @@ keyword we clicked on. We then open link from bibtex file."
                            ;;(fp-build-menu)
                            ;;(incf previous-level)
                            (org-map-entries #'(lambda () (fp-build-menu))
-                                            "webmenu-nopublic|web-nopublic|webtarget"
+                                            "webmenu-nopublic-ARCHIVE|web-nopublic-ARCHIVE|webtarget-ARCHIVE"
                                             'tree)
                            (setq fp-export-menu (getf (car fp-export-menu) :submenu))
                            (org-map-entries #'fp-org-html-export-function
                                             ;; "web-nopublic|webmenu-nopublic"
-                                            "web-nopublic"
+                                            "web-nopublic-ARCHIVE"
                                             'tree)))
-                     "webpage" 'file)
+                     "webpage-ARCHIVE" 'file)
     ;; (let ((org-export-before-processing-hook 'fp-remove-subtrees))
     ;;   (org-map-entries #'fp-org-html-export-function "webpage" 'file))
     ))
 
+(defun fp-export-get-ga-id ()
+  (with-current-buffer org-buffer
+    (or (fp-get-variable "HTML_GA_ID")
+        "")))
+
+(defun fp-export-title ()
+  (with-current-buffer org-buffer
+    (or (fp-get-variable "Title")
+        "")))
+
+(defun fp-export-description ()
+  (with-current-buffer org-buffer
+    (or (fp-get-variable "Description")
+        "")))
+
+(defun fp-export-keywords ()
+  (with-current-buffer org-buffer
+    (or (fp-get-variable "Keywords")
+        "")))
 
 (local-set-key (kbd "<f5>") #'fp-export-current-document)
 
@@ -3976,14 +4388,18 @@ keyword we clicked on. We then open link from bibtex file."
               (string-match "\\(\\`.*?\\)\\(?:\\\\hfill{}\\)?\\\\textsc{.*?newpage.*?}\\(.*\n\\)"
                             (downcase contents)))
          (replace-match "\\\\newpage\n\\1\\2"  nil nil contents))
-        ((and c(org-export-derived-backend-p backend 'latex)
+        ((and (org-export-derived-backend-p backend 'latex)
               (string-match "\\(\\`.*?\\)\\(?:\\\\hfill{}\\)?\\\\textsc{.*?clearpage.*?}\\(.*\n\\)" (downcase contents)))
          (replace-match "\\\\clearpage\n\\1\\2"  nil nil contents))))
 
 ;; (add-to-list 'org-export-filter-headline-functions 'tsd-filter-headline-tags)
 
 ;;  (org-export-to-file 'html (org-export-output-file-name ".html" t) nil t nil t)
+(defun fp-html-body-filter (data backend info)
+  (when (org-export-derived-backend-p backend 'html)
+    (replace-regexp-in-string "<p>[\s\n]*</p>" "" data)))
 
+(add-to-list 'org-export-filter-body-functions 'fp-html-body-filter)
 
 ;; (defun fp-html-link-filter (data backend info)
 ;;   "Handle id and custom_id links."
@@ -4037,15 +4453,15 @@ keyword we clicked on. We then open link from bibtex file."
                  ;; "c:/Home/Org/Lettres.org"
                  ;; "c:/Home/Org/NewsMining.org"
                  "c:/Home/Org/PDL2A.org"
-                 "c:/Home/Org/Personal.org"
+                 ;; "c:/Home/Org/Personal.org"
                  ;; "c:/Home/Org/Program-Samples.org"
                  ;; "c:/Home/Org/Programming.org"
                  ;; "c:/Home/Org/Publications.org"
-                 "c:/Home/Org/Research.org"
+                 ;; "c:/Home/Org/Research.org"
                  "c:/Home/Org/Software.org"
                  ;; "c:/Home/Org/Students.org"
                  "c:/Home/Org/THCS.org"
-                 "c:/Home/Org/Teaching.org"
+                 ;; "c:/Home/Org/Teaching.org"
                  ;; "c:/Home/Org/Worklog.org"
                  ;; "c:/Home/Org/foo-1.org"
                  ;; "c:/Home/Org/foo.org"
@@ -4065,16 +4481,175 @@ keyword we clicked on. We then open link from bibtex file."
 
 (defvar fp-export-links ())
 
-
 (defun fp-get-dest-filename-at ()
-  (save-excursion
-    (cl-loop
-     when (org-property--local-values "EXPORT_FILE_NAME" nil)
-     do (return (concat "../" (car (org-property--local-values "EXPORT_FILE_NAME" nil))))
-     if (> (org-current-level) 1)
-     do (outline-up-heading 1 t)
-     else do (return nil)
-     ))
+  (cl-loop
+   when (org--property-local-values "EXPORT_FILE_NAME" nil)
+   do (return (concat "../" (car (org--property-local-values "EXPORT_FILE_NAME" nil))))
+   if (> (org-current-level) 1)
+   do (outline-up-heading 1 t)
+   else do (return nil))
+  )
+
+(defun fp-get-link-dest-filename-at ()
+  (let* ((context
+          ;; Only consider supported types, even if they are not
+          ;; the closest one.
+          (org-element-lineage
+           (org-element-context)
+           '(clock comment comment-block footnote-definition
+                   footnote-reference headline inlinetask keyword link
+                   node-property timestamp)
+           t))
+         (type (org-element-type context))
+         (value (org-element-property :value context))
+         (reference-buffer (current-buffer))
+         arg
+         target-filename)
+    (message "type = %s value = %s\n" type value)
+    (cond
+     ((not context) (error "No link found"))
+     ;; Exception: open timestamps and links in properties
+     ;; drawers, keywords and comments.
+     ;; ((memq type '(comment comment-block keyword node-property))
+     ;;  (call-interactively #'org-open-at-point-global))
+     ;; On a headline or an inlinetask, but not on a timestamp,
+     ;; a link, a footnote reference or on tags.
+     ;; ((and (memq type '(headline inlinetask))
+     ;;       ;; Not on tags.
+     ;;       (let ((case-fold-search nil))
+     ;;         (save-excursion
+     ;;           (beginning-of-line)
+     ;;           (looking-at org-complex-heading-regexp))
+     ;;         (or (not (match-beginning 5))
+     ;;             (< (point) (match-beginning 5)))))
+     ;;  (let* ((data (org-offer-links-in-entry (current-buffer) (point) arg))
+     ;;         (links (car data))
+     ;;         (links-end (cdr data)))
+     ;;    (if links
+     ;;        (dolist (link (if (stringp links) (list links) links))
+     ;;          (search-forward link nil links-end)
+     ;;          (goto-char (match-beginning 0))
+     ;;          (org-open-at-point))
+     ;;      (require 'org-attach)
+     ;;      (org-attach-reveal 'if-exists))))
+     ;; ;; On a clock line, make sure point is on the timestamp
+     ;; ;; before opening it.
+     ;; ((and (eq type 'clock)
+     ;;       value
+     ;;       (>= (point) (org-element-property :begin value))
+     ;;       (<= (point) (org-element-property :end value)))
+     ;;  (org-follow-timestamp-link))
+     ;; ;; Do nothing on white spaces after an object.
+     ((>= (point)
+          (save-excursion
+            (goto-char (org-element-property :end context))
+            (skip-chars-backward " \t")
+            (point)))
+       (error "No link found"))
+     ;; ((eq type 'timestamp) (org-follow-timestamp-link))
+     ;; ;; On tags within a headline or an inlinetask.
+     ;; ((and (memq type '(headline inlinetask))
+     ;;       (let ((case-fold-search nil))
+     ;;         (save-excursion (beginning-of-line)
+     ;;                         (looking-at org-complex-heading-regexp))
+     ;;         (and (match-beginning 5)
+     ;;              (>= (point) (match-beginning 5)))))
+     ;;  (org-tags-view arg (substring (match-string 5) 0 -1)))
+     ((eq type 'link)
+      ;; When link is located within the description of another
+      ;; link (e.g., an inline image), always open the parent
+      ;; link.
+      (let* ((link (let ((up (org-element-property :parent context)))
+                     (if (eq (org-element-type up) 'link) up context)))
+             (type (org-element-property :type link))
+             (path (org-link-unescape (org-element-property :path link))))
+        ;; Switch back to REFERENCE-BUFFER needed when called in
+        ;; a temporary buffer through `org-open-link-from-string'.
+        (with-current-buffer (or reference-buffer (current-buffer))
+          (cond
+           ((equal type "file")
+            (if (string-match "[*?{]" (file-name-nondirectory path))
+                (dired path)
+              ;; Look into `org-link-parameters' in order to find
+              ;; a DEDICATED-FUNCTION to open file.  The function
+              ;; will be applied on raw link instead of parsed
+              ;; link due to the limitation in `org-add-link-type'
+              ;; ("open" function called with a single argument).
+              ;; If no such function is found, fallback to
+              ;; `org-open-file'.
+              (let* ((option (org-element-property :search-option link))
+                     (app (org-element-property :application link))
+                     (dedicated-function
+                      (org-link-get-parameter
+                       (if app (concat type "+" app) type)
+                       :follow)))
+                (if dedicated-function
+                    (funcall dedicated-function
+                             (concat path
+                                     (and option (concat "::" option))))
+                  (apply #'org-open-file
+                         path
+                         (cond (arg)
+                               ((equal app "emacs") 'emacs)
+                               ((equal app "sys") 'system))
+                         (cond ((not option) nil)
+                               ((string-match-p "\\`[0-9]+\\'" option)
+                                (list (string-to-number option)))
+                               (t (list nil
+                                        (org-link-unescape option)))))))))
+           ((functionp (org-link-get-parameter type :follow))
+            (funcall (org-link-get-parameter type :follow) path))
+           ((member type '("coderef" "custom-id" "fuzzy" "radio"))
+            (message "custom-id or fuzzy link %s\n" link)
+            (unless (run-hook-with-args-until-success
+                     'org-open-link-functions path)
+              (if (not arg) (org-mark-ring-push)
+                (switch-to-buffer-other-window
+                 (org-get-buffer-for-internal-link (current-buffer))))
+              (let ((destination
+                     (org-with-wide-buffer
+                      (if (equal type "radio")
+                          (org-search-radio-target
+                           (org-element-property :path link))
+                        (org-link-search
+                         (if (member type '("custom-id" "coderef"))
+                             (org-element-property :raw-link link)
+                           path)
+                         ;; Prevent fuzzy links from matching
+                         ;; themselves.
+                         (and (equal type "fuzzy")
+                              (+ 2 (org-element-property :begin link)))))
+                      (point))))
+                (unless (and (<= (point-min) destination)
+                             (>= (point-max) destination))
+                  (widen))
+                (goto-char destination))))
+           (t (browse-url-at-point)))
+          (save-excursion
+            (setq target-filename
+                  (cl-loop
+                   when (org--property-local-values "EXPORT_FILE_NAME" nil)
+                   do (return (concat "../" (car (org--property-local-values "EXPORT_FILE_NAME" nil))))
+                   if (> (org-current-level) 1)
+                   do (outline-up-heading 1 t)
+                   else do (return nil))))
+          )))
+     ;; On a footnote reference or at a footnote definition's label.
+     ((or (eq type 'footnote-reference)
+          (and (eq type 'footnote-definition)
+               (save-excursion
+                 ;; Do not validate action when point is on the
+                 ;; spaces right after the footnote label, in
+                 ;; order to be on par with behaviour on links.
+                 (skip-chars-forward " \t")
+                 (let ((begin
+                        (org-element-property :contents-begin context)))
+                   (if begin (< (point) begin)
+                     (= (org-element-property :post-affiliated context)
+                        (line-beginning-position)))))))
+      (org-footnote-action))
+     (t (error "No link found")))
+    target-filename)
   )
 
 (defun fp-print-link (link)
@@ -4120,20 +4695,16 @@ keyword we clicked on. We then open link from bibtex file."
                 (push elt links))))
         (mapc (lambda (link)
                 (goto-char (org-element-property :begin link))
-                (fp-print-link link)
+                (message "**Trying to link ") (fp-print-link link)
                 (let* ((type (org-element-property :type link))
                        (sourcefile
-                        (fp-get-dest-filename-at))
+                        (save-excursion (fp-get-dest-filename-at)))
                        (destfile
                         (if (member type '("fuzzy" "file"))
                             (with-current-buffer (current-buffer)
                               (save-excursion
                                 (save-window-excursion
-                                  (org-open-at-point)
-                                  ;; kill buffer ?
-                                  ;; (org-open-file (org-link-unescape (org-element-property :path link))
-                                  ;;                t nil (org-element-property :search-option link))
-                                  (fp-get-dest-filename-at))))
+                                  (fp-get-link-dest-filename-at))))
                           sourcefile))
                        (search-option (org-link-unescape (or (org-element-property :search-option link)
                                                              (org-element-property :path link))))
@@ -4147,7 +4718,7 @@ keyword we clicked on. We then open link from bibtex file."
                                       raw-link) t t))
                        )
 
-                  (message "type = %s raw-link = %s contents = %s source = %s -> dest = %s\n" type raw-link contents sourcefile destfile)
+                  (message "**Linked type = %s raw-link = %s contents = %s source = %s -> dest = %s\n" type raw-link contents sourcefile destfile)
                   ;; Beware: only image filetypes!
                   ;; See org-html-inline-image-rules
                   (cond
@@ -4180,9 +4751,38 @@ keyword we clicked on. We then open link from bibtex file."
          ;; (text (org-export-data (org-element-property :title headline) info))
          ;; (full-text (funcall (plist-get info :html-format-headline-function)
          ;;   todo todo-type priority text tags info))
-         (text (org-html-headline headline contents info))
+         (tags (org-export-get-tags headline info))
          )
-    (replace-regexp-in-string "<span class=\"section-number-\\([0-9]+\\)\">\\([0-9\\.]+\\)</span>\\(\\s-\\|\n\\)+Question" "Question <span class=\"section-number-\\1\">\\2</span>" text nil nil)))
+    (if (member "webclip" tags)
+        (let*
+            ((level (+ (org-export-get-relative-level headline info)
+                       (1- (plist-get info :html-toplevel-hlevel))))
+             (author (org-element-property :AUTHOR headline))
+             (url (org-element-property :URL headline))
+             (year (org-element-property :YEAR headline))
+             (image (org-element-property :IMAGE headline))
+             (text (org-export-data (org-element-property :title headline) info))
+             (contents (or contents ""))
+             (first-content (car (org-element-contents headline)))
+             (extra-class (org-element-property :HTML_CONTAINER_CLASS headline))
+             )
+          (message "url=%s" url)
+          (format "<div id=\"%s\" class=\"webclip %s\">\n<a href=\"%s\">%s</a>\n%s</div>"
+                  (concat "outline-container-"
+			  (org-export-get-reference headline info))
+                  (concat (format "outline-%d" level)
+                          (and extra-class " ")
+                          extra-class)
+                  url
+                  (format "\n<h%d>%s</h%d>\n"
+                          level text level)
+                  (if (eq (org-element-type first-content) 'section) contents
+                    (concat (org-html-section first-content "" info) contents))
+                  )
+            )
+        (replace-regexp-in-string "<span class=\"section-number-\\([0-9]+\\)\">\\([0-9\\.]+\\)</span>\\(\\s-\\|\n\\)+Question"
+                                  "Question <span class=\"section-number-\\1\">\\2</span>"
+                                  (org-html-headline headline contents info) nil nil))))
 
 
 ;; (defun fp-remove-subtrees (backend)
@@ -4209,8 +4809,8 @@ keyword we clicked on. We then open link from bibtex file."
                                         ;                         (when (string-match ":webpage" org-scanner-tags)
                                         ;                        (setq org-map-continue-from)
                                         ;                         )
-                         (when (car (org-property--local-values "EXPORT_FILE_NAME" nil))
-                           (list  :link (car (org-property--local-values "EXPORT_FILE_NAME" nil)))))
+                         (when (car (org--property-local-values "EXPORT_FILE_NAME" nil))
+                           (list  :link (car (org--property-local-values "EXPORT_FILE_NAME" nil)))))
                      "web-webpage-nopublic|webmenu-webpage-nopublic|webpage-web-nopublic"
                      scope
                      #'(lambda () (org-agenda-skip-subtree-if 'regexp "webpage+web"))
@@ -4244,7 +4844,7 @@ keyword we clicked on. We then open link from bibtex file."
 
 (defun fp-export-menu ()
   (let* ( ;; (org-buffer (current-buffer))
-         (org-use-tag-inheritance '("webpage"))
+         (org-use-tag-inheritance '("webpage" "ARCHIVE"))
          (previous-level 1)
          (count 0)
          (fp-export-level 1)
@@ -4256,11 +4856,11 @@ keyword we clicked on. We then open link from bibtex file."
        (when (eq fp-export-scope 'tree)
          (fp-build-menu)
          (incf previous-level)
-         (org-map-entries #'(lambda () (fp-build-menu)) "webmenu-nopublic|web-nopublic" fp-export-scope
+         (org-map-entries #'(lambda () (fp-build-menu)) "webmenu-nopublic-ARCHIVE|web-nopublic-ARCHIVE" fp-export-scope
                           ;; (lambda () (org-agenda-skip-subtree-if 'regexp "webpage"))
                           ))
        (when (eq fp-export-scope 'file)
-         (org-map-entries #'(lambda () (fp-build-menu)) "webmenu-nopublic|web-webpage-nopublic|webpage-web-nopublic" fp-export-scope
+         (org-map-entries #'(lambda () (fp-build-menu)) "webmenu-nopublic-ARCHIVE|web-webpage-nopublic-ARCHIVE|webpage-web-nopublic-ARCHIVE" fp-export-scope
                           ;; (lambda () (org-agenda-skip-subtree-if 'regexp "webpage"))
                           ))))
     (setq html-menu
@@ -4278,6 +4878,53 @@ keyword we clicked on. We then open link from bibtex file."
 
 (defun fp-export-menu ()
   (fp-build-menu-format-menu fp-export-menu))
+
+(defun fp-export-origo-menu ()
+  (fp-build-menu-origo-format-menu fp-export-menu))
+
+(defun fp-export-material-get (part)
+  (case part
+    (:title
+     (with-current-buffer org-buffer
+       (or (fp-get-variable "Title")
+           "")))
+    (:icon
+     (with-current-buffer org-buffer
+       (or (fp-get-variable "HTML_ICON")
+           "")))
+    (:description
+      (with-current-buffer org-buffer
+        (or (fp-get-variable "Description")
+            "")))
+    (:url
+     (concat "/"
+      (org-export-output-file-name ".html" t)))
+    (:author
+      (with-current-buffer org-buffer
+        (or (fp-get-variable "Author")
+        "")))
+    (:menu
+     (fp-build-menu-material-format-menu fp-export-menu))
+    (:ga
+     (with-current-buffer org-buffer
+       (or (fp-get-variable "HTML_GA_ID")
+           "")))
+    (:body
+     (with-current-buffer org-buffer
+       ;; (message "org-buffer = %s\n" (buffer-name org-buffer))
+       (org-export-as 'fp-html t nil t)))
+    (:palette
+     (with-current-buffer org-buffer
+       (let ((palette (fp-get-variable "HTML_PALETTE")))
+         (or (and palette (downcase palette))
+             "grey"))))
+    (:accent
+     (with-current-buffer org-buffer
+       (let ((accent (fp-get-variable "HTML_ACCENT")))
+         (or (and accent (downcase accent))
+             "yellow")))))
+  )
+
 
 (defun fp-get-webpage-at (menu level pos)
   (when menu
@@ -4320,26 +4967,26 @@ keyword we clicked on. We then open link from bibtex file."
     ))
 
 (defun fp-build-menu-push-at-right-place (l new current previous)
-  (let ((last (last l))
-        (butlast nil))
-    (while (and last (member :submenu (car last)))
-      (setq butlast last)
-      (setq last (last  (cadr (member :submenu (car last))))))
-    (cond ((null l) new)
+  ;; (message "l = %s\nnew = %s\ncurrent = %s\nprevious = %s\n" l new current previous)
+  (let ((ll (last l))
+        (bl nil))
+    (while (and ll (member :submenu (car ll)))
+      (setq bl ll)
+      (setq ll (last (cadr (member :submenu (car ll))))))
+    (cond ((null ll) (setq l new))
           ((> current previous)
-           (nconc (car last) (list :submenu new))
-           l)
+           (nconc (car ll) (list :submenu new)))
           ((< current previous)
-           (nconc  butlast new)
-           l)
-          (t (nconc last new)
-             l))))
+           (nconc bl new))
+          (t (nconc ll new)))
+    ;; (message "=> %s\n" l)
+    l))
 
 (defun fp-build-menu ()
   (let* ((current-level (org-current-level))
-         (item (list (list :text (car (org-property--local-values "EXPORT_HTML_MENU_TEXT" nil))
-                           :icon (car (org-property--local-values "EXPORT_HTML_MENU_ICON" nil))
-                           :link (concat "/" (car (org-property--local-values "EXPORT_FILE_NAME" nil)))
+         (item (list (list :text (car (org--property-local-values "EXPORT_HTML_MENU_TEXT" nil))
+                           :icon (car (org--property-local-values "EXPORT_HTML_MENU_ICON" nil))
+                           :link (concat "/" (car (org--property-local-values "EXPORT_FILE_NAME" nil)))
                            :level current-level
                            :count (incf fp-export-position)
                            :webpage (fp-under-tag-p "webpage")))))
@@ -4354,15 +5001,25 @@ keyword we clicked on. We then open link from bibtex file."
 ;; (org-map-entries #'(lambda ()
 ;;                      (show-subtree)
 ;;                      (org-next-visible-heading 1)
-;;                      (list :text (car (org-property--local-values "EXPORT_HTML_MENU_TEXT" nil))
-;;                            :icon (car (org-property--local-values "EXPORT_HTML_MENU_ICON" nil))
-;;                            :link (concat "/" (car (org-property--local-values "EXPORT_FILE_NAME" nil)))))
+;;                      (list :text (car (org--property-local-values "EXPORT_HTML_MENU_TEXT" nil))
+;;                            :icon (car (org--property-local-values "EXPORT_HTML_MENU_ICON" nil))
+;;                            :link (concat "/" (car (org--property-local-values "EXPORT_FILE_NAME" nil)))))
 ;;                  "webpage" 'file)
 
 (defun fp-build-menu-format-menu (menu)
   (apply #'concatenate 'string
          (loop for entry in menu
                collect (fp-build-menu-format-entry entry))))
+
+(defun fp-build-menu-origo-format-menu (menu)
+  (apply #'concatenate 'string
+         (loop for entry in menu
+               collect (fp-build-menu-origo-format-entry entry))))
+
+(defun fp-build-menu-material-format-menu (menu)
+  (apply #'concatenate 'string
+         (loop for entry in menu
+               collect (fp-build-menu-material-format-entry entry))))
 
 (defun fp-build-menu-format-entry (entry)
   (let ((submenu (and (member :submenu entry)
@@ -4387,6 +5044,56 @@ keyword we clicked on. We then open link from bibtex file."
                               (when submenu
                                 (concatenate 'string "<ul class=\"nav nav-second-level collapse\" id=\"submenu\">"
                                              submenu "</ul>"))
+                              "</li>"
+                              ))))
+
+(defun fp-build-menu-origo-format-entry (entry)
+  (let ((submenu (and (member :submenu entry)
+                      (fp-build-menu-origo-format-menu (cadr (member :submenu entry))))))
+    (concatenate 'string
+                 (concatenate 'string
+                              "<li><a href=\""
+                              (or (and
+                                   (not submenu)
+                                   (cadr (member :link entry))
+                                   ) "#")
+                              "\""
+                              " title=\""
+                              (or (cadr (member :text entry)) "")
+                              "\">"
+                              (or (cadr (member :text entry)) "")
+                              "</a>"
+                              (when submenu
+                                (concatenate 'string "<ul class=\"subpages\">"
+                                             submenu "</ul>"))
+                              "</li>"
+                              ))))
+
+(defun fp-build-menu-material-format-entry (entry)
+  (let ((submenu (and (member :submenu entry)
+                      (fp-build-menu-material-format-menu (cadr (member :submenu entry))))))
+    (message "submenu = %s" submenu)
+    (message "entry = %s" entry)
+    (concatenate 'string
+                 (concatenate 'string
+                              "<li><a href=\""
+                              (or (and
+                                   (not submenu)
+                                   (cadr (member :link entry))
+                                   ) "#")
+                              "\" "
+                              (when submenu
+                                "class=\"current\" ")
+                              "title=\""
+                              (or (cadr (member :text entry)) "")
+                              "\">"
+                              (or (cadr (member :text entry)) "")
+                              ;;(when submenu
+                              ;;  "<span class=\"fa fa-2x fa-carret-down\"/>")
+                              "</a>"
+                              (when submenu
+                                (concatenate 'string "<ul class=\"scrollspy\">"
+                                             (replace-regexp-in-string "<li>" "<li class=\"anchor\">" submenu) "</ul>"))
                               "</li>"
                               ))))
 
@@ -4417,10 +5124,10 @@ keyword we clicked on. We then open link from bibtex file."
       (fp-get-variable "HTML_ROOT")))
 
 (defun fp-export-colophon ()
-  "©<small>2016<br/><a href=\"/popineau/index.html\">Fabrice Popineau</a></small>")
+  "©<small>2017<br/><a href=\"/popineau/index.html\">Fabrice Popineau</a></small>")
 
 (defmacro by-backend (&rest body)
-  `(case (if (boundp 'backend) (org-export-backend-name backend) nil) ,@body))
+  `(cl-case (if (boundp 'backend) (org-export-backend-name backend) nil) ,@body))
 
 
 
@@ -4486,6 +5193,8 @@ On the flip side, for BEGIN_EXCEPT %s blocks, remove those if %s equals TYPE. "
 ;; https://github.com/jbranso/.emacs.d/blob/master/lisp/init-org.org#my-org-capure-templates
 (use-package org-clock
   :defer t
+  :ensure nil
+  :pin manual
   :config
   ;; Save the running clock and all clock history when exiting Emacs, load it on startup
   (setq org-clock-persistence-insinuate t)
@@ -4541,6 +5250,7 @@ On the flip side, for BEGIN_EXCEPT %s blocks, remove those if %s equals TYPE. "
 ;;            :sort-by :date
 ;;            :category-index nil))))
 
+
 ;; * Desktop
 
 ;; This functionality is provided by desktop-save-mode (“feature”
@@ -4566,77 +5276,77 @@ On the flip side, for BEGIN_EXCEPT %s blocks, remove those if %s equals TYPE. "
   :ensure nil
   :pin manual
   :init
-  ;; Buffers we want to be ignored by desktop-mode.
-  (setq desktop-buffers-not-to-save
-        (concat "\\("
-                "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
-                "\\|\\.emacs.*\\|\\.diary\\|\\.newsrc-dribble\\|\\.bbdb"
-                "\\)$")
-        )
-  ;; Buffers with one of these modes will be ignored by desktop-mode.
-  (setq desktop-modes-not-to-save
-        '(dired-mode Info-mode info-lookup-mode fundamental-mode lisp-interaction-mode help-mode)
-        )
+  ;; Automatically save and restore sessions
+  (setq desktop-dirname             "~/.emacs.d/savefile/"
+        desktop-base-file-name      "emacs.desktop"
+        desktop-base-lock-name      "lock"
+        desktop-path                (list desktop-dirname)
+        desktop-save                t
+        desktop-files-not-to-save   "^$" ;reload tramp paths
+        desktop-load-locked-desktop nil
+        ;; desktop-buffers-not-to-save
+        ;; (concat "\\("
+        ;;         "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
+        ;;         "\\|\\.emacs.*\\|\\.diary\\|\\.newsrc-dribble\\|\\.bbdb"
+        ;;         "\\)$")
+        desktop-auto-save-timeout   30)
+  (desktop-save-mode +1)
   :config
-;;; desktop: don't save flyspell and flycheck
+  ;; desktop: don't save flyspell and flycheck
   (add-to-list 'desktop-minor-mode-table
                '(flyspell-mode nil))
   (add-to-list 'desktop-minor-mode-table
                '(flycheck-mode nil))
   (add-to-list 'desktop-minor-mode-table
                '(flymake-mode nil))
-  (defun desktop-file-modtime-reset ()
-    "Reset `desktop-file-modtime' so the user is not bothered."
-    (interactive)
-    (run-with-timer 5 nil
-                    (lambda ()
-                      (setq desktop-file-modtime (nth 5 (file-attributes (desktop-full-file-name))))
-                      (desktop-save user-emacs-directory))))
-
-  (defun desktop-settings-setup ()
-    "Some settings setup for desktop-save-mode."
-    (interactive)
-
-    ;; At this point the desktop.el hook in after-init-hook was
-    ;; executed, so (desktop-read) is avoided.
-    (when (not (eq (emacs-pid) (desktop-owner))) ; Check that emacs did not load a desktop yet
-      ;; Here we activate the desktop mode
-      (desktop-save-mode 1)
-
-      ;; The default desktop is saved always
-      (setq desktop-save t)
-
-      ;; The default desktop is loaded anyway if it is locked
-      (setq desktop-load-locked-desktop t)
-
-      ;; Set the location to save/load default desktop
-      (setq desktop-dirname fp-config-savefile-dir)
-
-      ;; Make sure that even if emacs or OS crashed, emacs
-      ;; still have last opened files.
-      (add-hook 'find-file-hook
-                (lambda ()
-                  (run-with-timer 5 nil
-                                  (lambda ()
-                                    ;; Reset desktop modification time so the user is not bothered
-                                    (setq desktop-file-modtime (nth 5 (file-attributes (desktop-full-file-name))))
-                                    (desktop-save desktop-dirname)))))
-
-      ;; Read default desktop
-      (if (file-exists-p (desktop-full-file-name))
-          (desktop-read desktop-dirname))
-
-      ;; Add a hook when emacs is closed to we reset the desktop
-      ;; modification time (in this way the user does not get a warning
-      ;; message about desktop modifications)
-      (add-hook 'kill-emacs-hook 'desktop-file-modtime-reset)
-      )
-    )
-  (add-hook 'after-init-hook 'desktop-settings-setup "APPEND")
-  ;; (when fp-config-whitespace
-  ;;  (add-hook 'desktop-after-read-hook 'whitespace-unload-function t))
-
+  (add-to-list 'desktop-minor-mode-table
+               '(undo-tree-mode nil))
   )
+
+
+
+;; * Window management
+
+;; Emacs is stripped of all power to split frames.
+;; http://www.reflexivereflection.com/posts/2018-04-06-disabling-emacs-window-management.html
+
+(setq display-buffer-alist
+      '((popwin:display-buffer-condition popwin:display-buffer-action)
+        ("shell.*" (display-buffer-same-window) ())
+        (".*" (display-buffer-reuse-window
+               display-buffer-same-window
+               display-buffer-reuse-mode-window
+               display-buffer-use-some-window)
+         (reusable-frames . t))))
+
+;; (defun anders/same-window-instead
+;;     (orig-fun buffer alist)
+;;   (display-buffer-same-window buffer nil))
+;; (advice-add 'display-buffer-pop-up-window :around 'anders/same-window-instead)
+
+;; (advice-remove 'display-buffer-pop-up-window 'anders/same-window-instead)
+
+;; (defun anders/do-select-frame (orig-fun buffer &rest args)
+;;   (let* ((old-frame (selected-frame))
+;;          (window (apply orig-fun buffer args))
+;;          (frame (window-frame window)))
+;;     (unless (eq frame old-frame)
+;;       (select-frame-set-input-focus frame))
+;;     (select-window window)
+;;     window))
+
+;; (advice-add 'display-buffer :around 'anders/do-select-frame)
+;; (advice-remove 'display-buffer 'anders/do-select-frame)
+
+;; (setq frame-auto-hide-function 'delete-frame)
+
+;; (advice-add 'set-window-dedicated-p :around
+;;             (lambda (orig-fun &rest args) nil))
+
+;; (use-package e2wm
+;;   :ensure t
+;;   :config
+;;   (global-set-key (kbd "M-+") 'e2wm:start-management))
 
 
 ;; * Info path
@@ -4672,19 +5382,18 @@ On the flip side, for BEGIN_EXCEPT %s blocks, remove those if %s equals TYPE. "
 (put 'downcase-region 'disabled nil)
 (advice-add 'upcase-region
             :around
-  '(lambda(oldfun &rest args)
+  '(lambda (oldfun &rest args)
      "Only apply upcase-region when region active."
      (when (region-active-p)
        (apply oldfun args))))
 (advice-add 'downcase-region
             :around
-  '(lambda(oldfun &rest args)
+  '(lambda (oldfun &rest args)
      "Only apply downcase-region when region active."
      (when (region-active-p)
        (apply oldfun args))))
 
 ;; enable erase-buffer command
 (put 'erase-buffer 'disabled nil)
-
 
 ;;; init.el ends here
